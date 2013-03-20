@@ -1,0 +1,189 @@
+#!/bin/bash
+#
+# File:      logcat-colorize
+#
+# Purpose:   Colorize Android's logcat output in command-line windows
+#            Works on linux/mac terminals only.      
+#
+# Author:    BRAGA, Bruno <bruno.braga@gmail.com>
+#
+# Copyright:
+#
+#            Licensed under the Apache License, Version 2.0 (the "License");
+#            you may not use this file except in compliance with the License.
+#            You may obtain a copy of the License at
+#
+#            http://www.apache.org/licenses/LICENSE-2.0
+#
+#            Unless required by applicable law or agreed to in writing, software
+#            distributed under the License is distributed on an "AS IS" BASIS,
+#            WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#            implied. See the License for the specific language governing
+#            permissions and limitations under the License.
+#
+# Notes:     
+#            Bugs, issues and requests are welcome at:
+#            https://bitbucket.org/brunobraga/logcat-colorize/issues
+#
+
+# ----------------------------
+# VERSION
+# ----------------------------
+_VERSION=0.1
+
+
+# DO NOT EDIT ANYTHING BELOW THIS LINE!
+
+# define global variables
+_date=
+_level=
+_tag=
+_process=
+_log=
+
+#
+# Colorize values (f stands for foreground, b for background)
+#
+
+fblack="\033[0;30m"
+fred="\033[0;31m"
+fgreen="\033[0;32m"
+fyellow="\033[0;33m"
+fblue="\033[0;34m"
+fpurple="\033[0;35m"
+fcyan="\033[0;36m"
+fwhite="\033[0;37m"
+fgrey="\033[1;30m"
+bblack="\033[40m"
+bred="\033[41m"
+bgreen="\033[42m"
+byellow="\033[43m"
+bblue="\033[44m"
+bpurple="\033[45m"
+bcyan="\033[46m"
+bwhite="\033[47m"
+bold="\033[1m"
+underline="\033[4m"
+reset="\033[0m"
+
+#
+# Parse a line of logcat output, considering brief and time formats
+#
+# See more details about output format at:
+# http://developer.android.com/tools/debugging/debugging-log.html#outputFormat
+#
+function parse_log() {
+
+    local tmp line original uses_time
+    
+    line=$@
+    
+    # define if option "-v time" is being used
+    [ `echo "$line" | egrep -i "^[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}" | wc -l` -eq 0 ] && uses_time=false || uses_time=true
+    
+    if $uses_time; then
+        # clean up date/time and proceed as usual (get back to it later)
+        original=$line
+        line=`echo ${line#* }`
+        line=`echo ${line#* }`
+    fi    
+    
+    # parsing log string
+    _level=`echo ${line%%/*}`
+    tmp=`echo ${line##$_level/}`
+    _tag=`echo ${tmp%%(*}`
+    tmp=`echo ${line#*\(}`
+    _process=`echo ${tmp%%)*}`
+    _log=`echo ${line#*:}`
+
+    if $uses_time; then
+        _date=`echo ${original%%$_level/*}`
+    fi    
+}
+
+#
+# Outputs a logcat line using appropriate colors 
+#
+function output() {
+
+    # date    
+    [ ! "$_date" == "" ] && echo -ne "$fpurple $_date $reset "
+    
+    # level   
+     
+    [ "$_level" == "V" ] && echo -ne "$fblack$bcyan$bold $_level $reset"
+    [ "$_level" == "D" ] && echo -ne "$fwhite$bblue$bold $_level $reset"
+    [ "$_level" == "I" ] && echo -ne "$fwhite$bgreen$bold $_level $reset"
+    [ "$_level" == "W" ] && echo -ne "$fblack$byellow$bold $_level $reset"
+    [ "$_level" == "E" ] && echo -ne "$fwhite$bred$bold $_level $reset"
+    [ "$_level" == "F" ] && echo -ne "$fwhite$bred$bold $_level $reset"
+    [ "$_level" == "S" ] && echo -ne "$fcyan $bblack$bold $_level $reset"
+
+    # process    
+    echo -ne " $fcyan$bblack[$_process]$reset"
+
+    # tag    
+    echo -ne " $fwhite $_tag "
+
+    # log message
+    [ "$_level" == "V" ] && echo -ne "$fblack $_log"
+    [ "$_level" == "D" ] && echo -ne "$fblue $_log"
+    [ "$_level" == "I" ] && echo -ne "$fgreen $_log"
+    [ "$_level" == "W" ] && echo -ne "$fyellow $_log"
+    [ "$_level" == "E" ] && echo -ne "$fred $_log"
+    [ "$_level" == "F" ] && echo -ne "$fred $_log"
+    [ "$_level" == "S" ] && echo -ne "$fblack $_log"
+
+    echo -ne "\n"        
+}
+
+#
+# Main 
+#
+
+cmd="$@"
+
+if [ -z "$cmd" ]; then
+    echo "
+`basename $0` v.$_VERSION
+
+A simple script to colorize Android debugger's logcat output. This works much 
+like xargs, where the COMMAND following it will be plain executed here.
+
+Usage: `basename $0` [COMMAND]
+
+Examples:
+    Simplest usage:
+    `basename $0` adb logcat 
+
+    Using specific device, with time details, and filtering:
+    `basename $0` adb -s emulator-5556 logcat -v time System.err:V *:S 
+
+    Piping to grep for regex filtering (much better than adb filter):
+    `basename $0` adb logcat -v time | egrep -i '(sensor|wifi)'
+    
+Author: BRAGA, Bruno <bruno.braga@gmail.com>
+    
+    Comments or bugs are welcome at: 
+    https://bitbucket.org/brunobraga/logcat-colorize/issues
+"
+
+elif [[ ! $cmd = "adb"* ]]; then
+    echo "ERROR: This is only valid for adb commands."
+    exit 1
+fi
+
+# adb logcat -v time
+$@ | \
+{
+    while read data; do 
+    
+        # ignore initial lines
+        [[ $data = "---------"* ]] && continue
+    
+        # parse data with fixed carriage return
+        parse_log `echo $data | tr -d '\r'`
+        output
+    done    
+}
+

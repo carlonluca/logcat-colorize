@@ -4,9 +4,11 @@ A simple script that colorizes Android Debug Bridge (adb)'s logcat output on
 a terminal window.
 
 Some notes:
-  - supports output formats as brief or time (see more about this in the official ![docs][1])
+  - supports output formats as brief or time (see more about this in the official [docs][1])
   - works on Linux (maybe on Mac as well)
   - a bit slow for too much logcat data, but once it catches up, it is ideal to use (consider also using filters)
+
+![image][2]
 
 # Installation
 
@@ -35,4 +37,5 @@ That's it!
 
 
 [1]: http://developer.android.com/tools/debugging/debugging-log.html#outputFormat
+[2]: https://bitbucket.org/brunobraga/logcat-colorize/downloads/example.jpg
 

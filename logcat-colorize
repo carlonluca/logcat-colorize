@@ -29,12 +29,13 @@
 # ----------------------------
 # VERSION
 # ----------------------------
-_VERSION=0.1
+_VERSION=0.2
 
 
 # DO NOT EDIT ANYTHING BELOW THIS LINE!
 
 # define global variables
+_line=
 _date=
 _level=
 _tag=
@@ -74,27 +75,25 @@ reset="\033[0m"
 #
 function parse_log() {
 
-    local tmp line original uses_time
-    
-    line=$@
+    local tmp original uses_time
     
     # define if option "-v time" is being used
-    [ `echo "$line" | egrep -i "^[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}" | wc -l` -eq 0 ] && uses_time=false || uses_time=true
-    
+    [ `echo -e "$_line" | egrep -i "^[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}" | wc -l` -eq 0 ] && uses_time=false || uses_time=true
+
     if $uses_time; then
         # clean up date/time and proceed as usual (get back to it later)
-        original=$line
-        line=`echo ${line#* }`
-        line=`echo ${line#* }`
+        original=$_line
+        _line="`echo -e "${_line#* }"`"
+        _line="`echo -e "${_line#* }"`"
     fi    
     
     # parsing log string
-    _level=`echo ${line%%/*}`
-    tmp=`echo ${line##$_level/}`
-    _tag=`echo ${tmp%%(*}`
-    tmp=`echo ${line#*\(}`
-    _process=`echo ${tmp%%)*}`
-    _log=`echo ${line#*:}`
+    _level="`echo -e "${_line%%/*}"`"
+    tmp="`echo -e "${_line##$_level/}"`"
+    _tag="`echo -e "${tmp%%(*}"`"
+    tmp="`echo -e "${_line#*\(}"`"
+    _process="`echo -e "${tmp%%)*}"`"
+    _log="`echo -e "${_line#*:}"`"
 
     if $uses_time; then
         _date=`echo ${original%%$_level/*}`
@@ -107,7 +106,7 @@ function parse_log() {
 function output() {
 
     # date    
-    [ ! "$_date" == "" ] && echo -ne "$fpurple $_date $reset "
+    [ ! "$_date" == "" ] && echo -ne "$fpurple $_date $reset"
     
     # level   
      
@@ -123,7 +122,7 @@ function output() {
     echo -ne " $fcyan$bblack[$_process]$reset"
 
     # tag    
-    echo -ne " $fwhite $_tag "
+    echo -ne "$fwhite $_tag"
 
     # log message
     [ "$_level" == "V" ] && echo -ne "$fblack $_log"
@@ -174,16 +173,17 @@ elif [[ ! $cmd = "adb"* ]]; then
 fi
 
 # adb logcat -v time
-$@ | \
+"$@" | \
 {
     while read data; do 
     
         # ignore initial lines
         [[ $data = "---------"* ]] && continue
-    
-        # parse data with fixed carriage return
-        parse_log `echo $data | tr -d '\r'`
+        
+        # fix carriage return
+        _line="`echo -e "$data" | sed 's/\\r$//g'`"
+        
+        parse_log
         output
     done    
 }
-

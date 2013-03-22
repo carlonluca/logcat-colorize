@@ -3,34 +3,33 @@
 A simple script that colorizes Android Debug Bridge (adb)'s logcat output on 
 a terminal window.
 
+*Update*: I had written this as a quick approach in bash, but turns out it is pretty slow, specially pulling logcat from new devices (really a lot). So I decided to go a bit lower level and re-wrote this in C++. 
+
 Some notes:
   - supports output formats as brief or time (see more about this in the official [docs][1])
-  - works on Linux (maybe on Mac as well)
-  - a bit slow for too much logcat data, but once it catches up, it is ideal to use (consider also using filters)
+  - works on Linux
 
 ![image][2]
 
 # Installation
 
-    # save the logcat-colorize to a directory of your PATH
-    # (usually /usr/local/bin)
-    # set execution permission to the file
-    
-    $ sudo chmod +x /usr/local/bin/logcat-colorize
-    
-    # you are ready!
+    # download (or clone) the source
+    $ make
+    $ sudo make install
 
 # Usage
 
+    # Help and version info:
+    $ logcat-colorize
 
     # Simplest usage:
-    $ logcat-colorize adb logcat 
+    $ adb logcat | logcat-colorize
 
     # Using specific device, with time details, and filtering:
-    $ logcat-colorize adb -s emulator-5556 logcat -v time System.err:V *:S 
+    $ adb -s emulator-5556 logcat -v time System.err:V *:S | logcat-colorize
 
     # Piping to grep for regex filtering (much better than adb filter):
-    $ logcat-colorize adb logcat -v time | egrep -i '(sensor|wifi)'
+    $ adb logcat -v time | egrep -i '(sensor|wifi)' | logcat-colorize
 
 
 That's it!

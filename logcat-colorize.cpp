@@ -211,7 +211,7 @@ class Brief : public Format {
 
 public:
 	const int type = Format::BRIEF;
-	Brief() : Format("^([SVDIWEF])/(.*)\\(([ 0-9]{1,})\\): (.*)$") {}
+	Brief() : Format("^([SVDIWEF])/(.*?)\\(([ 0-9]{1,})\\): (.*)$") {}
 	~Brief() {}
     virtual void parse(const string raw) {
         boost::smatch matches = this->match(raw);
@@ -233,7 +233,7 @@ class Time : public Format {
 
 public:
 	const int type = Format::TIME;
-	Time() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}) ([SVDIWEF])/(.*)\\(([ 0-9]{1,})\\): (.*)$") {}
+	Time() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}) ([SVDIWEF])/(.*?)\\(([ 0-9]{1,})\\): (.*)$") {}
 	~Time() {}
     virtual void parse(string raw) {
     	boost::smatch matches = this->match(raw);
@@ -255,7 +255,7 @@ class ThreadTime : public Format {
 
 public:
 	const int type = Format::THREADTIME;
-	ThreadTime() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})  ([0-9]{1,})  ([0-9]{1,}) ([SVDIWEF]) (.*): (.*)$") {}
+	ThreadTime() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})  ([0-9]{1,})  ([0-9]{1,}) ([SVDIWEF]) (.*?): (.*)$") {}
 	~ThreadTime() {}
     virtual void parse(string raw) {
     	boost::smatch matches = this->match(raw);

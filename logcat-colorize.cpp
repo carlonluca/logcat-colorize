@@ -40,13 +40,15 @@
 using namespace std;
 
 const string NAME = "logcat-colorize";
-const string VERSION = "0.3";
+const string VERSION = "0.4";
 
 const string HELP = 
     NAME + " v" + VERSION + "\n"
     "\n"
     "A simple script to colorize Android debugger's logcat output.\n"
     "To use this, you should pipe from adb output. See examples below.\n"
+    "\n"
+    "Note: Valid ONLY for Brief, Time and ThreadTime formats at this point.\n"
     "\n"
     "Examples:\n"
     "    Simplest usage:\n"
@@ -123,8 +125,28 @@ class Format {
 
 protected:
     Logcat l;
+    boost::regex pattern;
+    boost::smatch match(const string raw) {
+    	string::const_iterator start;
+		start = raw.begin();
+		boost::smatch results;
+		boost::match_flag_type flags = boost::match_default;
+		boost::regex_search(start, raw.end(), results, this->pattern, flags);
+		return results;
+    }
 
 public:
+    const int type = -1;
+    Format(const string pattern) {
+        this->l = Logcat { /*date   */ "",
+        				   /*level  */ "",
+        				   /*tag    */ "",
+        				   /*process*/ "",
+        				   /*message*/ "",
+        				   /*thread */ "" };
+        this->pattern = pattern;
+    }
+    virtual ~Format() {};
     static const int BRIEF;
     static const int PROCESS;
     static const int TAG;
@@ -133,8 +155,8 @@ public:
     static const int THREADTIME;
     static const int LONG;
     
-    virtual void parse(string raw) {}
-    virtual bool ok() { return false; }
+    virtual void parse(const string raw) = 0;
+    virtual bool valid() { return false; }
     void print() {
         
         string out = "";
@@ -188,69 +210,96 @@ const int Format::LONG       = 6;
 class Brief : public Format {
 
 public:
-    virtual void parse(string raw) {
-        this->l = Logcat { /*date*/ "", /*level*/ "", /*tag*/ "", /*process*/ "", /*message*/ "", /*thread*/ "" };
-        const boost::regex pattern("^([SVDIWEF])/(.*)\\(([ 0-9]{1,})\\): (.*)$");
-        string::const_iterator start, end;
-        start = raw.begin();
-        end = raw.end();
-        boost::smatch what;
-        boost::match_flag_type flags = boost::match_default;
-        while(boost::regex_search(start, end, what, pattern, flags)) {
-            if (what.size() >= 5)
-                this->l = Logcat { /*date*/ "", /*level*/ what[1], /*tag*/ what[2], /*process*/ what[3], /*message*/ what[4], /*thread*/ "" };
-            start = what[0].second;
+	const int type = Format::BRIEF;
+	Brief() : Format("^([SVDIWEF])/(.*)\\(([ 0-9]{1,})\\): (.*)$") {}
+	~Brief() {}
+    virtual void parse(const string raw) {
+        boost::smatch matches = this->match(raw);
+        if (matches.size() >= 5) {
+        	this->l.date = "";
+        	this->l.level = matches[1];
+        	this->l.message = matches[4];
+        	this->l.process = matches[3];
+        	this->l.tag = matches[2];
+        	this->l.thread = "";
         }
     }
-    virtual bool ok() {
-        return this->l.level != "" && this->l.tag != "" && this->l.process != "";
+    virtual bool valid() {
+        return this->l.level != "" && this->l.process != "";
     }
 };
 
 class Time : public Format {
 
 public:
+	const int type = Format::TIME;
+	Time() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}) ([SVDIWEF])/(.*)\\(([ 0-9]{1,})\\): (.*)$") {}
+	~Time() {}
     virtual void parse(string raw) {
-        this->l = Logcat { /*date*/ "", /*level*/ "", /*tag*/ "", /*process*/ "", /*message*/ "", /*thread*/ "" };
-        const boost::regex pattern("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}) ([SVDIWEF])/(.*)\\(([ 0-9]{1,})\\): (.*)$");
-        string::const_iterator start, end;
-        start = raw.begin();
-        end = raw.end();
-        boost::smatch what;
-        boost::match_flag_type flags = boost::match_default;
-        while(boost::regex_search(start, end, what, pattern, flags)) {
-            if (what.size() >= 6)
-                this->l = Logcat { /*date*/ what[1], /*level*/ what[2], /*tag*/ what[3], /*process*/ what[4], /*message*/ what[5], /*thread*/ "" };
-
-            start = what[0].second;
-        }
+    	boost::smatch matches = this->match(raw);
+		if (matches.size() >= 6) {
+			this->l.date = matches[1];
+			this->l.level = matches[2];
+			this->l.message = matches[5];
+			this->l.process = matches[4];
+			this->l.tag = matches[3];
+			this->l.thread = "";
+		}
     }
-    virtual bool ok() {
-        return this->l.date != "" && this->l.level != "" && this->l.tag != "" && this->l.process != "";
+    virtual bool valid() {
+        return this->l.date != "" && this->l.level != "" && this->l.process != "";
     }
 };
 
 class ThreadTime : public Format {
 
 public:
+	const int type = Format::THREADTIME;
+	ThreadTime() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})  ([0-9]{1,})  ([0-9]{1,}) ([SVDIWEF]) (.*): (.*)$") {}
+	~ThreadTime() {}
     virtual void parse(string raw) {
-        this->l = Logcat { /*date*/ "", /*level*/ "", /*tag*/ "", /*process*/ "", /*message*/ "", /*thread*/ "" };
-        const boost::regex pattern("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})  ([0-9]{1,})  ([0-9]{1,}) ([SVDIWEF]) (.*): (.*)$");
-        string::const_iterator start, end;
-        start = raw.begin();
-        end = raw.end();
-        boost::smatch what;
-        boost::match_flag_type flags = boost::match_default;
-        while(boost::regex_search(start, end, what, pattern, flags)) {
-            if (what.size() >= 6)
-                this->l = Logcat { /*date*/ what[1], /*level*/ what[4], /*tag*/ what[5], /*process*/ what[2], /*message*/ what[6], /*thread*/ what[3] };
-            start = what[0].second;
-        }
+    	boost::smatch matches = this->match(raw);
+		if (matches.size() >= 7) {
+			this->l.date = matches[1];
+			this->l.level = matches[4];
+			this->l.message = matches[6];
+			this->l.process = matches[2];
+			this->l.tag = matches[5];
+			this->l.thread = matches[3];
+		}
     }
-    virtual bool ok() {
-        return this->l.date != "" && this->l.level != "" && this->l.tag != "" && this->l.process != "" && this->l.thread != "";
+    virtual bool valid() {
+        return this->l.date != "" && this->l.level != "" && this->l.process != "" && this->l.thread != "";
     }
 };
+
+
+Format* getFormat(const string raw) {
+
+	//
+	// At this point we don't know yet which format is being used, so guess it
+	// (from the more complex first)
+	//
+
+	ThreadTime tt = ThreadTime();
+	tt.parse(raw);
+	if (tt.valid())
+		return new ThreadTime();
+
+	Time t = Time();
+	t.parse(raw);
+	if (t.valid())
+		return new Time();
+
+	Brief b = Brief();
+	b.parse(raw);
+	if (b.valid())
+		return new Brief();
+
+	// If nothing was found
+	return NULL;
+}
+
 
 int main() {
 
@@ -261,43 +310,25 @@ int main() {
         */
         
         string line;
-        int format = -1; 
-        bool firstTime = true;
-        ThreadTime tt = ThreadTime();
-        Time t = Time();
-        Brief b = Brief();
+        Format* f = NULL;
 
         while (getline(cin, line)) {
             
             // ignore non logging stuff
             if (line.substr(0, 9) == "---------") continue;
-            
-            if (firstTime || format == Format::THREADTIME) {
-                tt.parse(line);
-                if (tt.ok()) {
-                    format = Format::THREADTIME;
-                    tt.print();
-                }
+
+            if (f == NULL) {
+            	// only need to do this once
+            	f = getFormat(line);
             }
-            if (firstTime || format == Format::TIME) {
-                t.parse(line);
-                if (t.ok()) {
-                    format = Format::TIME;
-                    t.print();
-                }
-            }
-            if (firstTime || format == Format::BRIEF) {
-                b.parse(line);
-                if (b.ok()) {
-                    format = Format::BRIEF;
-                    b.print();
-                }
-            }
-            if (format < 0) {
+            if (f == NULL) {
                 cout << "ERROR: format not supported. Pipe either brief, time or threadtime formats only." << endl;
                 return 1;
             }
-            firstTime = false;
+
+            // output in colors
+            f->parse(line);
+           	f->print();
         }
     }
     else {

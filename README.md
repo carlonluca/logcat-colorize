@@ -11,6 +11,16 @@ A simple script that colorizes Android Debug Bridge (adb)'s logcat output on a t
 
 ![image][2]
 
+# Requirements
+
+This depends on:
+
+  * libboost-regex
+
+If you are on Debian/Ubuntu:
+
+    $ sudo apt-get install -y build-essential libboost-regex-dev
+
 # Installation
 
     # download (or clone) the source

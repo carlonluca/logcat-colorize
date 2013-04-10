@@ -37,18 +37,29 @@
 #include <iostream>
 #include <stdio.h>
 #include <boost/regex.hpp>
+#include <boost/program_options.hpp>
 using namespace std;
 
 const string NAME = "logcat-colorize";
-const string VERSION = "0.4";
+const string VERSION = "0.5";
+
+const int SUCCESS = 0;
+const int ERROR_UNKNOWN = 1;
 
 const string HELP = 
     NAME + " v" + VERSION + "\n"
     "\n"
     "A simple script to colorize Android debugger's logcat output.\n"
-    "To use this, you should pipe from adb output. See examples below.\n"
+    "To use this, you MUST pipe from adb output. See examples below.\n"
+    "Valid ONLY for Tag, Process, Brief, Time and ThreadTime formats.\n"
+    "Other formats are simply not parsed here.\n"
     "\n"
-    "Note: Valid ONLY for Brief, Time and ThreadTime formats at this point.\n"
+    "Usage: adb logcat [options] | " + NAME + " [options] \n"
+    "\n"
+    "Options:\n"
+    "   -i, --ignore  does not output non-matching data\n"
+    "                 (by default, those are printed out without colorizing)\n"
+    "   -h, --help    prints this help information\n"
     "\n"
     "Examples:\n"
     "    Simplest usage:\n"
@@ -127,23 +138,23 @@ protected:
     Logcat l;
     boost::regex pattern;
     boost::smatch match(const string raw) {
-    	string::const_iterator start;
-		start = raw.begin();
-		boost::smatch results;
-		boost::match_flag_type flags = boost::match_default;
-		boost::regex_search(start, raw.end(), results, this->pattern, flags);
-		return results;
+        string::const_iterator start;
+        start = raw.begin();
+        boost::smatch results;
+        boost::match_flag_type flags = boost::match_default;
+        boost::regex_search(start, raw.end(), results, this->pattern, flags);
+        return results;
     }
 
 public:
     const int type = -1;
     Format(const string pattern) {
         this->l = Logcat { /*date   */ "",
-        				   /*level  */ "",
-        				   /*tag    */ "",
-        				   /*process*/ "",
-        				   /*message*/ "",
-        				   /*thread */ "" };
+                           /*level  */ "",
+                           /*tag    */ "",
+                           /*process*/ "",
+                           /*message*/ "",
+                           /*thread */ "" };
         this->pattern = pattern;
     }
     virtual ~Format() {};
@@ -167,12 +178,12 @@ public:
         
         // level
         if (this->l.level != "") {
-            if (this->l.level == "V") out += Color::fblack + Color::bcyan   + Color::bold + " " + this->l.level + " " + Color::reset;
+            if (this->l.level == "V") out += Color::fwhite + Color::bcyan   + Color::bold + " " + this->l.level + " " + Color::reset;
             if (this->l.level == "D") out += Color::fwhite + Color::bblue   + Color::bold + " " + this->l.level + " " + Color::reset;
             if (this->l.level == "I") out += Color::fwhite + Color::bgreen  + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "W") out += Color::fblack + Color::byellow + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "E") out += Color::fblack + Color::bred    + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "F") out += Color::fblack + Color::bred    + Color::bold + " " + this->l.level + " " + Color::reset;
+            if (this->l.level == "W") out += Color::fwhite + Color::byellow + Color::bold + " " + this->l.level + " " + Color::reset;
+            if (this->l.level == "E") out += Color::fwhite + Color::bred    + Color::bold + " " + this->l.level + " " + Color::reset;
+            if (this->l.level == "F") out += Color::fwhite + Color::bred    + Color::bold + " " + this->l.level + " " + Color::reset;
         }
         
         // process/thread
@@ -192,7 +203,6 @@ public:
             if (this->l.level == "W") out += Color::fyellow + " " + this->l.message;
             if (this->l.level == "E") out += Color::fred + " " + this->l.message;
             if (this->l.level == "F") out += Color::fred + " " + this->l.message;
-            if (this->l.level == "S") out += Color::fblack + " " + this->l.message;
         }
         out +=  Color::reset;
         cout << out << endl;
@@ -207,21 +217,67 @@ const int Format::TIME       = 4;
 const int Format::THREADTIME = 5;
 const int Format::LONG       = 6;
 
+
+class Tag : public Format {
+
+public:
+    const int type = Format::TAG;
+    Tag() : Format("^([VDIWEF])/(.*?): (.*)$") {}
+    ~Tag() {}
+    virtual void parse(const string raw) {
+        boost::smatch matches = this->match(raw);
+        if (matches.size() >= 3) {
+            this->l.date = "";
+            this->l.level = matches[1];
+            this->l.message = matches[3];
+            this->l.process = "";
+            this->l.tag = matches[2];
+            this->l.thread = "";
+        }
+    }
+    virtual bool valid() {
+        return this->l.level != "";
+    }
+};
+
+class Process : public Format {
+
+public:
+    const int type = Format::PROCESS;
+    Process() : Format("^([VDIWEF])\\(([ 0-9]{1,})\\) (.*) \\(((.*?))\\)$") {}
+    ~Process() {}
+    virtual void parse(const string raw) {
+        boost::smatch matches = this->match(raw);
+        if (matches.size() >= 4) {
+            this->l.date = "";
+            this->l.level = matches[1];
+            this->l.message = matches[3];
+            this->l.process = matches[2];
+            this->l.tag = matches[4];
+            this->l.thread = "";
+        }
+    }
+    virtual bool valid() {
+        return this->l.level != "" && this->l.process != "";
+    }
+};
+
+
 class Brief : public Format {
 
 public:
-	const int type = Format::BRIEF;
-	Brief() : Format("^([SVDIWEF])/(.*?)\\(([ 0-9]{1,})\\): (.*)$") {}
-	~Brief() {}
+    const int type = Format::BRIEF;
+    Brief() : Format("^([VDIWEF])/(.*?)\\(([ 0-9]{1,})\\): (.*)$") {}
+    ~Brief() {}
     virtual void parse(const string raw) {
         boost::smatch matches = this->match(raw);
         if (matches.size() >= 5) {
-        	this->l.date = "";
-        	this->l.level = matches[1];
-        	this->l.message = matches[4];
-        	this->l.process = matches[3];
-        	this->l.tag = matches[2];
-        	this->l.thread = "";
+            this->l.date = "";
+            this->l.level = matches[1];
+            this->l.message = matches[4];
+            this->l.process = matches[3];
+            this->l.tag = matches[2];
+            this->l.thread = "";
         }
     }
     virtual bool valid() {
@@ -232,19 +288,19 @@ public:
 class Time : public Format {
 
 public:
-	const int type = Format::TIME;
-	Time() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}) ([SVDIWEF])/(.*?)\\(([ 0-9]{1,})\\): (.*)$") {}
-	~Time() {}
+    const int type = Format::TIME;
+    Time() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}):? ([VDIWEF])/(.*?)\\(([ 0-9]{1,})\\): (.*)$") {}
+    ~Time() {}
     virtual void parse(string raw) {
-    	boost::smatch matches = this->match(raw);
-		if (matches.size() >= 6) {
-			this->l.date = matches[1];
-			this->l.level = matches[2];
-			this->l.message = matches[5];
-			this->l.process = matches[4];
-			this->l.tag = matches[3];
-			this->l.thread = "";
-		}
+        boost::smatch matches = this->match(raw);
+        if (matches.size() >= 6) {
+            this->l.date = matches[1];
+            this->l.level = matches[2];
+            this->l.message = matches[5];
+            this->l.process = matches[4];
+            this->l.tag = matches[3];
+            this->l.thread = "";
+        }
     }
     virtual bool valid() {
         return this->l.date != "" && this->l.level != "" && this->l.process != "";
@@ -254,19 +310,19 @@ public:
 class ThreadTime : public Format {
 
 public:
-	const int type = Format::THREADTIME;
-	ThreadTime() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})  ([0-9]{1,})  ([0-9]{1,}) ([SVDIWEF]) (.*?): (.*)$") {}
-	~ThreadTime() {}
+    const int type = Format::THREADTIME;
+    ThreadTime() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})  ([0-9]{1,})  ([0-9]{1,}) ([VDIWEF]) (.*?): (.*)$") {}
+    ~ThreadTime() {}
     virtual void parse(string raw) {
-    	boost::smatch matches = this->match(raw);
-		if (matches.size() >= 7) {
-			this->l.date = matches[1];
-			this->l.level = matches[4];
-			this->l.message = matches[6];
-			this->l.process = matches[2];
-			this->l.tag = matches[5];
-			this->l.thread = matches[3];
-		}
+        boost::smatch matches = this->match(raw);
+        if (matches.size() >= 7) {
+            this->l.date = matches[1];
+            this->l.level = matches[4];
+            this->l.message = matches[6];
+            this->l.process = matches[2];
+            this->l.tag = matches[5];
+            this->l.thread = matches[3];
+        }
     }
     virtual bool valid() {
         return this->l.date != "" && this->l.level != "" && this->l.process != "" && this->l.thread != "";
@@ -276,69 +332,107 @@ public:
 
 Format* getFormat(const string raw) {
 
-	//
-	// At this point we don't know yet which format is being used, so guess it
-	// (from the more complex first)
-	//
-
-	ThreadTime tt = ThreadTime();
-	tt.parse(raw);
-	if (tt.valid())
-		return new ThreadTime();
-
-	Time t = Time();
-	t.parse(raw);
-	if (t.valid())
-		return new Time();
-
-	Brief b = Brief();
-	b.parse(raw);
-	if (b.valid())
-		return new Brief();
-
-	// If nothing was found
-	return NULL;
+    //
+    // At this point we don't know yet which format is being used, so guess it
+    // (from the more complex first)
+    //
+    Format * out = NULL;
+    out = new ThreadTime();
+    out->parse(raw);
+    if (!out->valid()) {
+        out = NULL;
+        out = new Time();
+        out->parse(raw);
+        if (!out->valid()) {
+            out = NULL;
+            out = new Brief();
+            out->parse(raw);
+            if (!out->valid()) {
+                out = NULL;
+                out = new Process();
+				out->parse(raw);
+				if (!out->valid()) {
+	                out = NULL;
+	                out = new Tag();
+					out->parse(raw);
+					if (!out->valid()) {
+						out = NULL;
+					}
+            	}
+            }
+        }
+    }
+    return out;
 }
 
 
-int main() {
+int main(int argc, char** argv) {
+    try {
+        // parse command line arguments, if available
+    	bool ignore = false;
+        namespace po = boost::program_options;
+        po::options_description desc("Options");
+        desc.add_options()
+          ("help,h", "")
+          ("ignore,i", "");
 
-    if (!isatty(fileno(stdin))) {
-        /*
-        Stdin is coming from a pipe or redirection
-        That's how we want to use this program
-        */
-        
-        string line;
-        Format* f = NULL;
-
-        while (getline(cin, line)) {
-            
-            // ignore non logging stuff
-            if (line.substr(0, 9) == "---------") continue;
-
-            if (f == NULL) {
-            	// only need to do this once
-            	f = getFormat(line);
-            }
-            if (f == NULL) {
-                cout << "ERROR: format not supported. Pipe either brief, time or threadtime formats only." << endl;
-                return 1;
-            }
-
-            // output in colors
-            f->parse(line);
-           	f->print();
+        po::variables_map vm;
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        if (vm.count("help")) {
+			std::cout << HELP << std::endl;
+			return SUCCESS;
         }
-    }
-    else {
-        /*
-        Stdin is the terminal, so there is nothing to do
-        just display help information and exit
-        */
-        cout << HELP << endl;
-        return 0;
-    }
+        if (vm.count("ignore")) ignore = true;
+        po::notify(vm);
 
-    return 0;
+		if (!isatty(fileno(stdin))) {
+			/*
+			Stdin is coming from a pipe or redirection
+			That's how we want to use this program
+			*/
+
+			string line;
+			Format *f = NULL;
+
+			while (getline(cin, line)) {
+
+				if (f == NULL) {
+					// only need to do this once
+					f = getFormat(line);
+				}
+				if (f == NULL) {
+					if (!ignore)
+						cout << line << endl;
+					continue;
+				}
+
+				// execute parsing
+				f->parse(line);
+				if (f->valid()) {
+					f->print();
+				}
+				else {
+					// hum... it matched before, but not in this line
+					// maybe something went wrong or not properly parseable
+					// according to the expected REGEX
+					if (!ignore)
+						cout << line << endl;
+				}
+			}
+			delete f;
+		}
+		else {
+			/*
+			Stdin is the terminal, so there is nothing to do
+			just display help information and exit
+			*/
+			std::cout << HELP << std::endl;
+		}
+
+	}
+	catch(std::exception& e) {
+		std::cerr << "Oops! Something went wrong. Error: " << e.what() << std::endl;
+		return ERROR_UNKNOWN;
+	}
+	return SUCCESS;
 }

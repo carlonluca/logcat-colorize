@@ -24,7 +24,7 @@
 #
 
 CC=g++
-CFLAGS=-lboost_regex -std=c++0x
+CFLAGS=-lboost_regex -lboost_program_options -std=c++0x
 EXEC=logcat-colorize
 DEPS=logcat-colorize.cpp
 PREFIX=/usr/local

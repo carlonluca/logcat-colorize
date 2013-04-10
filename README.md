@@ -6,7 +6,7 @@ A simple script that colorizes Android Debug Bridge (adb)'s logcat output on a t
 
 *Notes*:
 
-  - supports output formats as brief or time (see more about this in the official [docs][1]);
+  - supports output formats: brief, tag, process, time or threadtime (see more about this in the official [docs][1]);
   - works on Linux (haven't tested on other platforms);
 
 ![image][2]
@@ -16,10 +16,12 @@ A simple script that colorizes Android Debug Bridge (adb)'s logcat output on a t
 This depends on:
 
   * libboost-regex
+  * libboost-program-options
 
 If you are on Debian/Ubuntu:
-
-    $ sudo apt-get install -y build-essential libboost-regex-dev
+    
+    # Ubuntu 12.10 packages (may differ depending on version)
+    $ sudo apt-get install -y build-essential libboost-regex1.50-dev libboost-program-options1.50-dev
 
 # Installation
 

@@ -350,15 +350,15 @@ Format* getFormat(const string raw) {
             if (!out->valid()) {
                 out = NULL;
                 out = new Process();
-				out->parse(raw);
-				if (!out->valid()) {
-	                out = NULL;
-	                out = new Tag();
-					out->parse(raw);
-					if (!out->valid()) {
-						out = NULL;
-					}
-            	}
+                out->parse(raw);
+                if (!out->valid()) {
+                    out = NULL;
+                    out = new Tag();
+                    out->parse(raw);
+                    if (!out->valid()) {
+                        out = NULL;
+                    }
+                }
             }
         }
     }
@@ -369,7 +369,7 @@ Format* getFormat(const string raw) {
 int main(int argc, char** argv) {
     try {
         // parse command line arguments, if available
-    	bool ignore = false;
+        bool ignore = false;
         namespace po = boost::program_options;
         po::options_description desc("Options");
         desc.add_options()
@@ -379,60 +379,60 @@ int main(int argc, char** argv) {
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
         if (vm.count("help")) {
-			std::cout << HELP << std::endl;
-			return SUCCESS;
+            std::cout << HELP << std::endl;
+            return SUCCESS;
         }
         if (vm.count("ignore")) ignore = true;
         po::notify(vm);
 
-		if (!isatty(fileno(stdin))) {
-			/*
-			Stdin is coming from a pipe or redirection
-			That's how we want to use this program
-			*/
+        if (!isatty(fileno(stdin))) {
+            /*
+            Stdin is coming from a pipe or redirection
+            That's how we want to use this program
+            */
 
-			string line;
-			Format *f = NULL;
+            string line;
+            Format *f = NULL;
 
-			while (getline(cin, line)) {
+            while (getline(cin, line)) {
 
-				if (f == NULL) {
-					// only need to do this once
-					f = getFormat(line);
-				}
-				if (f == NULL) {
-					if (!ignore)
-						cout << line << endl;
-					continue;
-				}
+                if (f == NULL) {
+                    // only need to do this once
+                    f = getFormat(line);
+                }
+                if (f == NULL) {
+                    if (!ignore)
+                        cout << line << endl;
+                    continue;
+                }
 
-				// execute parsing
-				f->parse(line);
-				if (f->valid()) {
-					f->print();
-				}
-				else {
-					// hum... it matched before, but not in this line
-					// maybe something went wrong or not properly parseable
-					// according to the expected REGEX
-					if (!ignore)
-						cout << line << endl;
-				}
-			}
-			delete f;
-		}
-		else {
-			/*
-			Stdin is the terminal, so there is nothing to do
-			just display help information and exit
-			*/
-			std::cout << HELP << std::endl;
-		}
+                // execute parsing
+                f->parse(line);
+                if (f->valid()) {
+                    f->print();
+                }
+                else {
+                    // hum... it matched before, but not in this line
+                    // maybe something went wrong or not properly parseable
+                    // according to the expected REGEX
+                    if (!ignore)
+                        cout << line << endl;
+                }
+            }
+            delete f;
+        }
+        else {
+            /*
+            Stdin is the terminal, so there is nothing to do
+            just display help information and exit
+            */
+            std::cout << HELP << std::endl;
+        }
 
-	}
-	catch(std::exception& e) {
-		std::cerr << "Oops! Something went wrong. Error: " << e.what() << std::endl;
-		return ERROR_UNKNOWN;
-	}
-	return SUCCESS;
+    }
+    catch(std::exception& e) {
+        std::cerr << "Oops! Something went wrong. Error: " << e.what() << std::endl;
+        return ERROR_UNKNOWN;
+    }
+    return SUCCESS;
 }

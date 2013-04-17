@@ -1,8 +1,8 @@
 /*
  File:      logcat-colorize.cpp
 
- Purpose:   Colorize Android's logcat output in command-line windows
-            Works on linux/mac terminals only.      
+ Purpose:   Colorizes Android's logcat output in command-line windows
+            Works on linux/mac terminals only. 
 
  Author:    BRAGA, Bruno <bruno.braga@gmail.com>
 
@@ -27,9 +27,10 @@
  Dependencies:
  
             libboost-regex-dev 
+            libboost-program-options-dev 
 
  Compiling:
-            g++ logcat-colorize.cpp -o logcat-colorize -lboost_regex -std=c++0x
+            See Makefile.
 */
 
 #include <unistd.h>

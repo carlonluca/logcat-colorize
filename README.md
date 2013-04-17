@@ -1,8 +1,6 @@
 # logcat-colorize
 
-A simple script that colorizes Android Debug Bridge (adb)'s logcat output on a terminal window.
-
-**Update**: I had written this as a quick approach in bash, but turns out it is pretty slow, specially pulling logcat from new devices (really a lot). So I decided to go a bit lower level and re-wrote this in C++. For reference, if you want to see the bash version, check out the [tag 0.2][3].
+A simple program that colorizes Android Debug Bridge (adb)'s logcat output on a terminal window.
 
 *Notes*:
 
@@ -20,8 +18,7 @@ This depends on:
 
 If you are on Debian/Ubuntu:
     
-    # Ubuntu 12.10 packages (may differ depending on version)
-    $ sudo apt-get install -y build-essential libboost-regex1.50-dev libboost-program-options1.50-dev
+    $ sudo apt-get install -y build-essential libboost-regex-dev libboost-program-options-dev
 
 # Installation
 
@@ -45,6 +42,9 @@ If you are on Debian/Ubuntu:
 
 
 That's it!
+
+
+**Note**: I had written this as a quick approach in bash, but turns out it is pretty slow, specially pulling logcat from new devices (really a lot). So I decided to go a bit lower level and re-wrote this in C++. For reference, if you want to see the bash version, check out the [tag 0.2][3].
 
 
 [1]: http://developer.android.com/tools/debugging/debugging-log.html#outputFormat

@@ -27,18 +27,26 @@ CC=g++
 CFLAGS=-lboost_regex -lboost_program_options -std=c++0x
 EXEC=logcat-colorize
 DEPS=logcat-colorize.cpp
-BINDIR=/usr/local/bin
+
+ifndef PREFIX
+	PREFIX=/usr
+endif
+
+INSTALLDIR=$(DESTDIR)$(PREFIX)/bin
 
 $(EXEC): $(DEPS)
 	$(CC) $(DEPS) -o $(EXEC) $(CFLAGS)
 
+$(INSTALLDIR):
+	mkdir -pv $(INSTALLDIR)
+
 clean:
 	rm -f $(EXEC)
 
-install: $(EXEC)
-	@mkdir -p $(DESTDIR)$(BINDIR)
-	install -m 0755 $(EXEC) $(DESTDIR)$(BINDIR)
+install: $(EXEC) $(INSTALLDIR)
+	install -m 0755 $(EXEC) $(INSTALLDIR)
 
 uninstall:
-	rm -f $(DESTDIR)$(BINDIR)/$(EXEC)
+	rm -f $(INSTALLDIR)/$(EXEC)
 
+.PHONY: install clean

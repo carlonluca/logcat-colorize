@@ -23,6 +23,8 @@
 #
 ###############################################################################
 
+set -o errexit
+
 base_path="`pwd`/`dirname $0`/.."
 cur_dir=`pwd`
 package_name="logcat-colorize"
@@ -73,27 +75,13 @@ echo "Cleaning up..."
 rm -rfv .hg*
 echo "Done"
 
-echo "Fixing makefile..."
-sed -i 's/BINDIR=\/usr\/local/BINDIR=\/usr/' $temp_dir/$package_dir_name/Makefile
-
-echo "Done"
-
 echo "Making original tarball"
 mv debian ../
 tar -czvf ../$package_dir_name.orig.tar.gz ../$package_dir_name
 mv ../debian .
 echo "Done"
 
-#
-# Fix stuff for Ubuntu
-#
-
-# remove quilt
-#rm -rfv debian/source/format
-#echo "Done"
-
 echo "Building package..."
-#dpkg-buildpackage -rfakeroot
 debuild -S # can not upload deb to launchpad, only sources
 echo "Done"
 
@@ -105,5 +93,12 @@ echo "Finished packaging $package_dir_name"
 # upload to Launchpad PPA
 echo "Type anything to upload to LaunchPad... (will receive a confirmation by email)"
 read -n 1
-dput ppa:bruno-braga/logcat-colorize /tmp/packaging/${package_dir_name}-1${ubuntu_suffix}_source.changes
+dput logcat-colorize /tmp/packaging/${package_dir_name}-1${ubuntu_suffix}_source.changes
+echo "Done"
+
+echo "Cleaning up..."
+rm -rfv $temp_dir
+hg revert -C debian/changelog
+echo "Done"
+
 

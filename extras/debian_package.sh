@@ -23,6 +23,8 @@
 #
 ###############################################################################
 
+set -o errexit
+
 base_path="`pwd`/`dirname $0`/.."
 cur_dir=`pwd`
 package_name="logcat-colorize"
@@ -53,10 +55,6 @@ echo "Cleaning up..."
 rm -rfv .hg*
 echo "Done"
 
-echo "Fixing makefile..."
-sed -i 's/BINDIR=\/usr\/local/BINDIR=\/usr/' $temp_dir/$package_dir_name/Makefile
-
-
 echo "Making original tarball"
 mv debian ../
 tar -czvf ../$package_dir_name.orig.tar.gz ../$package_dir_name
@@ -72,3 +70,8 @@ cd $cur_dir
 
 # Done!
 echo "Finished packaging $package_dir_name"
+
+echo "Cleaning up..."
+rm -rfv $temp_dir
+echo "Done"
+

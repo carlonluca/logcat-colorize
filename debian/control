@@ -2,17 +2,16 @@ Source: logcat-colorize
 Section: misc
 Priority: optional
 Maintainer: Bruno Braga <bruno.braga@gmail.com>
-Build-Depends: debhelper (>= 7.4.3), libboost-dev (>= 1.49), libboost-regex-dev (>= 1.49), libboost-program-options-dev (>= 1.49)
+Build-Depends: debhelper (>= 7.4.15), libboost-dev (>= 1.40), libboost-regex-dev (>= 1.40), libboost-program-options-dev (>= 1.40)
 Standards-Version: 3.9.3
 Homepage: https://bitbucket.org/brunobraga/logcat-colorize
 
 Package: logcat-colorize
 Architecture: any
-Depends: libboost-dev (>= 1.49), libboost-regex-dev (>= 1.49), libboost-program-options-dev (>= 1.49)
+Depends: libboost-dev (>= 1.40), libboost-regex-dev (>= 1.40), libboost-program-options-dev (>= 1.40)
 Description: displays android logcat in colors
  displays the Android Debug Bridge (adb)'s log output in 
  colors in terminal (command-line). 
  .
  This is for those who prefer to handle logcat in terminal 
  instead of Eclipse.
-

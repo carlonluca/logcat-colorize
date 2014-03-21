@@ -24,7 +24,12 @@
 #
 
 CC=g++
-CFLAGS=-lboost_regex -lboost_program_options -std=c++0x
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+   CCFLAGS += -lboost_regex -lboost_program_options -std=c++0x
+else ifeq ($(UNAME_S),Darwin)
+   CCFLAGS += -L/opt/local/lib -lboost_regex-mt -lboost_program_options-mt -std=c++0x -I/opt/local/include -Wno-deprecated-register
+endif
 EXEC=logcat-colorize
 DEPS=logcat-colorize.cpp
 
@@ -35,7 +40,7 @@ endif
 INSTALLDIR=$(DESTDIR)$(PREFIX)/bin
 
 $(EXEC): $(DEPS)
-	$(CC) $(DEPS) -o $(EXEC) $(CFLAGS)
+	$(CC) $(DEPS) -o $(EXEC) $(CCFLAGS)
 
 $(INSTALLDIR):
 	mkdir -pv $(INSTALLDIR)

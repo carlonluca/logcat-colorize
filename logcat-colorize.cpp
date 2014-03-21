@@ -138,7 +138,7 @@ class Format {
 protected:
     Logcat l;
     boost::regex pattern;
-    boost::smatch match(const string raw) {
+    boost::smatch match(const string& raw) {
         string::const_iterator start;
         start = raw.begin();
         boost::smatch results;
@@ -149,7 +149,7 @@ protected:
 
 public:
     const int type = -1;
-    Format(const string pattern) {
+    Format(const string& pattern) {
         this->l = Logcat { /*date   */ "",
                            /*level  */ "",
                            /*tag    */ "",
@@ -396,7 +396,6 @@ int main(int argc, char** argv) {
             Format *f = NULL;
 
             while (getline(cin, line)) {
-
                 if (f == NULL) {
                     // only need to do this once
                     f = getFormat(line);

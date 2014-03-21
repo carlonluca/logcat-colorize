@@ -36,6 +36,10 @@ If you are on Debian/Ubuntu:
     
         $ sudo apt-get install -y build-essential libboost-regex-dev libboost-program-options-dev
 
+If you are on Mac OS X (using macports with libs installed in /opt/local):
+
+        $ sudo port install boost
+
 Compile and install:
 
         # download (or clone) the source

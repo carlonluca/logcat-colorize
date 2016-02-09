@@ -312,7 +312,7 @@ class ThreadTime : public Format {
 
 public:
     const int type = Format::THREADTIME;
-    ThreadTime() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})  ([0-9]{1,})  ([0-9]{1,}) ([VDIWEF]) (.*?): (.*)$") {}
+    ThreadTime() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3})[[:space:]]*([0-9]{1,})[[:space:]]*([0-9]{1,}) ([VDIWEF]) (.*?): (.*)$") {}
     ~ThreadTime() {}
     virtual void parse(string raw) {
         boost::smatch matches = this->match(raw);

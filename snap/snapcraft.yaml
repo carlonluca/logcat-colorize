@@ -1,7 +1,7 @@
 name: logcat-colorize
 version: "0.7.0"
 summary: logcat-colorize
-confinement: classic
+confinement: strict
 grade: stable
 description: |
   logcat-colorize is a software that parses Android logcat output and

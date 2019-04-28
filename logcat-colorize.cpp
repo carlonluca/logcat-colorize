@@ -74,9 +74,10 @@ const string HELP =
     "    adb logcat -v time | egrep -i '(sensor|wifi)' | " + NAME + "\n"
     "\n"
     "Author: BRAGA, Bruno <bruno.braga@gmail.com>\n"
+    "Author: CARLON, Luca <carlon.luca@gmail.com>\n"
     "\n"
     "    Comments or bugs are welcome at:\n"
-    "    https://bitbucket.org/brunobraga/logcat-colorize/issues\n";
+    "    https://github.com/carlonluca/logcat-colorize/issues\n";
 
 class Color {
 

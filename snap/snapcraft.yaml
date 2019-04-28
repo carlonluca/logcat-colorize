@@ -5,7 +5,9 @@ confinement: classic
 grade: stable
 description: |
   logcat-colorize is a software that parses Android logcat output and
-  prints it to stdout with improved formatting.
+  prints it to stdout with improved formatting. Colors are added to the
+  output to make it more clear. You'll still be able to add filters using
+  the adb command.
 
 apps:
   logcat-colorize:

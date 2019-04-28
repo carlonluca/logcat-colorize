@@ -5,7 +5,7 @@ A simple program that colorizes Android Debug Bridge (adb)'s logcat output on a 
 *Notes*:
 
   - supports output formats: brief, tag, process, time or threadtime (see more about this in the official [docs][1]);
-  - works on Linux (haven't tested on other platforms);
+  - works on Linux and Mac OS;
 
 ![image][2]
 

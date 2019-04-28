@@ -1,0 +1,27 @@
+name: logcat-colorize
+version: "0.7.0"
+summary: logcat-colorize
+confinement: classic
+grade: stable
+description: |
+  logcat-colorize is a software that parses Android logcat output and
+  prints it to stdout with improved formatting.
+
+apps:
+  logcat-colorize:
+    command: usr/bin/logcat-colorize
+
+parts:
+  logcat-colorize:
+    plugin: make
+    source-type: git
+    source-tag: v0.7.0
+    source: https://github.com/carlonluca/logcat-colorize.git
+    build-packages:
+      - g++
+      - make
+      - libboost-regex-dev
+      - libboost-program-options-dev
+    stage-packages:
+      - libboost-regex1.67.0
+      - libboost-program-options1.67.0

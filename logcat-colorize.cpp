@@ -5,6 +5,7 @@
             Works on linux/mac terminals only. 
 
  Author:    BRAGA, Bruno <bruno.braga@gmail.com>
+ Author:    CARLON, Luca <carlon.luca@gmail.com>
 
  Copyright:
             Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +22,7 @@
 
  Notes:     
             Bugs, issues and requests are welcome at:
-            https://bitbucket.org/brunobraga/logcat-colorize/issues
+            https://github.com/carlonluca/logcat-colorize/issues
 
 
  Dependencies:
@@ -42,7 +43,7 @@
 using namespace std;
 
 const string NAME = "logcat-colorize";
-const string VERSION = "0.6";
+const string VERSION = "0.7.0";
 
 const int SUCCESS = 0;
 const int ERROR_UNKNOWN = 1;

@@ -26,6 +26,8 @@ parts:
     plugin: dump
     source-type: local
     source: ..
+    stage-packages:
+      - android-tools-adb
     organize:
       'logcat': usr/bin/
 

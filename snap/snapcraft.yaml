@@ -9,12 +9,6 @@ description: |
   output to make it more clear. You'll still be able to add filters using
   the adb command.
 
-apps:
-  logcat-colorize:
-    command: usr/bin/logcat-colorize
-  logcat:
-    command: usr/bin/logcat
-
 parts:
   logcat-colorize:
     plugin: make
@@ -26,9 +20,17 @@ parts:
       - libboost-regex-dev
       - libboost-program-options-dev
     stage-packages:
-      - libboost-regex1.58.0
-      - libboost-program-options1.58.0
+      - libboost-regex1.67.0
+      - libboost-program-options1.67.0
   logcat:
     plugin: dump
-    source: ../
     source-type: local
+    source: ..
+    organize:
+      'logcat': usr/bin/
+
+apps:
+  logcat-colorize:
+    command: usr/bin/logcat-colorize
+  logcat:
+    command: usr/bin/logcat

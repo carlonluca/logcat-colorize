@@ -1,5 +1,6 @@
 name: logcat-colorize
-version: "0.7.0"
+base: core18
+version: "0.8.0"
 summary: logcat-colorize
 confinement: strict
 grade: stable
@@ -22,8 +23,8 @@ parts:
     build-packages:
       - g++
       - make
-      - libboost-regex-dev
-      - libboost-program-options-dev
+      - libboost-regex1.65-dev
+      - libboost-program-options1.65-dev
     stage-packages:
-      - libboost-regex1.67.0
-      - libboost-program-options1.67.0
+      - libboost-regex1.65.1
+      - libboost-program-options1.65.1

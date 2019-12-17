@@ -40,6 +40,8 @@
 #include <stdio.h>
 #include <boost/regex.hpp>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 using namespace std;
 
 const string NAME = "logcat-colorize";
@@ -59,9 +61,11 @@ const string HELP =
     "Usage: adb logcat [options] | " + NAME + " [options] \n"
     "\n"
     "Options:\n"
-    "   -i, --ignore  does not output non-matching data\n"
-    "                 (by default, those are printed out without colorizing)\n"
-    "   -h, --help    prints this help information\n"
+    "   -i, --ignore        does not output non-matching data\n"
+    "                       (by default, those are printed out without colorizing)\n"
+    "   -h, --help          prints this help information\n"
+    "   -s, --spotlight     highlight pattern in the output, value as REGEXP\n"
+    "                       (i.e, -s '\bWORD\b'\n"
     "\n"
     "Examples:\n"
     "    Simplest usage:\n"
@@ -140,6 +144,8 @@ class Format {
 protected:
     Logcat l;
     boost::regex pattern;
+    boost::regex spotlight_pattern;
+    string spotlight_color;
     boost::smatch match(const string& raw) {
         string::const_iterator start;
         start = raw.begin();
@@ -150,6 +156,9 @@ protected:
     }
 
 public:
+    void setSpotlight(const string& spotlight) {
+        this->spotlight_pattern = (boost::format("(%1%)") % spotlight).str();
+    }
     const int type = -1;
     Format(const string& pattern) {
         this->l = Logcat { /*date   */ "",
@@ -159,6 +168,7 @@ public:
                            /*message*/ "",
                            /*thread */ "" };
         this->pattern = pattern;
+        this->spotlight_color = "\033[0;41m$1\033[0;0m";
     }
     virtual ~Format() {};
     static const int BRIEF;
@@ -199,13 +209,20 @@ public:
             out += " " + Color::fwhite + this->l.tag + Color::reset;
 
         // log message
+        string message;
+        if (!spotlight_pattern.empty()) {
+            message = boost::regex_replace(this->l.message,spotlight_pattern,spotlight_color);
+        } else {
+            message = this->l.message;
+        }
+
         if (this->l.message != "") {
-            if (this->l.level == "V") out += Color::fblack + " " + this->l.message;
-            if (this->l.level == "D") out += Color::fblue + " " + this->l.message;
-            if (this->l.level == "I") out += Color::fgreen + " " + this->l.message;
-            if (this->l.level == "W") out += Color::fyellow + " " + this->l.message;
-            if (this->l.level == "E") out += Color::fred + " " + this->l.message;
-            if (this->l.level == "F") out += Color::fred + " " + this->l.message;
+            if (this->l.level == "V") out += Color::fblack + " " + message;
+            if (this->l.level == "D") out += Color::fblue + " " + message;
+            if (this->l.level == "I") out += Color::fgreen + " " + message;
+            if (this->l.level == "W") out += Color::fyellow + " " + message;
+            if (this->l.level == "E") out += Color::fred + " " + message;
+            if (this->l.level == "F") out += Color::fred + " " + message;
         }
         out +=  Color::reset;
         cout << out << endl;
@@ -377,6 +394,7 @@ int main(int argc, char** argv) {
         po::options_description desc("Options");
         desc.add_options()
           ("help,h", "")
+          ("spotlight,s",po::value<string>(), "")
           ("ignore,i", "");
 
         po::variables_map vm;
@@ -401,6 +419,12 @@ int main(int argc, char** argv) {
                 if (f == NULL) {
                     // only need to do this once
                     f = getFormat(line);
+                    if (f != NULL) {
+                        if (vm.count("spotlight")) {
+                            std::string line = vm["spotlight"].as<string>();
+                            f->setSpotlight(line);
+                        }
+                    }
                 }
                 if (f == NULL) {
                     if (!ignore)

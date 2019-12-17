@@ -159,6 +159,7 @@ public:
     void setSpotlight(const string& spotlight) {
         this->spotlight_pattern = (boost::format("(%1%)") % spotlight).str();
     }
+
     const int type = -1;
     Format(const string& pattern) {
         this->l = Logcat { /*date   */ "",
@@ -168,7 +169,7 @@ public:
                            /*message*/ "",
                            /*thread */ "" };
         this->pattern = pattern;
-        this->spotlight_color = "\033[0;41m$1\033[0;0m";
+        this->spotlight_color = Color::fwhite + Color::bred + "$1" + Color::reset;
     }
     virtual ~Format() {};
     static const int BRIEF;
@@ -208,23 +209,26 @@ public:
         if (this->l.tag != "")
             out += " " + Color::fwhite + this->l.tag + Color::reset;
 
-        // log message
-        string message;
-        if (!spotlight_pattern.empty()) {
-            message = boost::regex_replace(this->l.message,spotlight_pattern,spotlight_color);
-        } else {
-            message = this->l.message;
+        // message
+        if (this->l.message != "") {
+            const string* messageColor;
+            if (this->l.level == "V") messageColor = &Color::fblack;
+            else if (this->l.level == "D") messageColor = &Color::fblue;
+            else if (this->l.level == "I") messageColor = &Color::fgreen;
+            else if (this->l.level == "W") messageColor = &Color::fyellow;
+            else if (this->l.level == "E") messageColor = &Color::fred;
+            else if (this->l.level == "F") messageColor = &Color::fred;
+            else messageColor = &Color::fwhite;
+
+            out += " ";
+            out += *messageColor;
+            if (!spotlight_pattern.empty())
+                out += boost::regex_replace(this->l.message, spotlight_pattern, spotlight_color + *messageColor);
+            else
+                out += this->l.message;
         }
 
-        if (this->l.message != "") {
-            if (this->l.level == "V") out += Color::fblack + " " + message;
-            if (this->l.level == "D") out += Color::fblue + " " + message;
-            if (this->l.level == "I") out += Color::fgreen + " " + message;
-            if (this->l.level == "W") out += Color::fyellow + " " + message;
-            if (this->l.level == "E") out += Color::fred + " " + message;
-            if (this->l.level == "F") out += Color::fred + " " + message;
-        }
-        out +=  Color::reset;
+        out += Color::reset;
         cout << out << endl;
     }
 };

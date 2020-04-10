@@ -2,6 +2,7 @@
 PortSystem          1.0
 name                logcat-colorize
 version             0.8.1
+license             Apache-2
 categories          devel
 platforms           darwin
 maintainers         @carlonluca \
@@ -19,4 +20,4 @@ checksums           rmd160  a7f465551403929f73c5b76649a73e043e33105a \
 depends_lib         port:boost
 use_configure       no
 build.target
-destroot.args       PREFIX="/opt/local"
+destroot.args       PREFIX=${prefix}

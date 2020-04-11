@@ -9,9 +9,6 @@ A simple program that colorizes Android Debug Bridge (adb)'s logcat output on a 
 
 ![image][2]
 
-I would also recommend: [Android Bash Completion][4]
-
-
 # Installation
 
 ## Snap
@@ -57,10 +54,6 @@ Compile and install:
         # Save logcat output to file and read later with logcat colorize.
         $ adb logcat > /tmp/logcat.txt
         $ cat /tmp/logcat.txt | logcat-colorize
-
-
-That's it!
-
 
 **Note**: I had written this as a quick approach in bash, but turns out it is pretty slow, specially pulling logcat from new devices (really a lot). So I decided to go a bit lower level and re-wrote this in C++. For reference, if you want to see the bash version, check out the [tag 0.2][3].
 

@@ -66,6 +66,6 @@ That's it!
 
 
 [1]: http://developer.android.com/tools/debugging/debugging-log.html#outputFormat
-[2]: https://bitbucket.org/brunobraga/logcat-colorize/downloads/example.jpg
+[2]: https://github.com/carlonluca/logcat-colorize/blob/master/extras/shot.png
 [3]: https://bitbucket.org/brunobraga/logcat-colorize/src/8a17155d0d7c29c19130695d7a699e83830456ce?at=0.2
 [4]: https://github.com/mbrubeck/android-completion

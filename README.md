@@ -52,7 +52,11 @@ Compile and install:
         $ adb -s emulator-5556 logcat -v time System.err:V *:S | logcat-colorize
         
         # Piping to grep for regex filtering (much better than adb filter):
-        $ adb logcat -v time | egrep -i '(sensor|wifi)' | logcat-colorize
+        $ adb logcat -v time | logcat-colorize | egrep -i '(sensor|wifi)'
+
+        # Save logcat output to file and read later with logcat colorize.
+        $ adb logcat > /tmp/logcat.txt
+        $ cat /tmp/logcat.txt | logcat-colorize
 
 
 That's it!

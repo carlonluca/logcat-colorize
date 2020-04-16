@@ -23,7 +23,7 @@
 #            https://bitbucket.org/brunobraga/logcat-colorize/issues
 #
 
-CC=g++
+#CC=g++
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
    CCFLAGS += -lboost_regex -lboost_program_options -std=c++0x
@@ -40,7 +40,7 @@ endif
 INSTALLDIR=$(DESTDIR)/$(PREFIX)/bin
 
 $(EXEC): $(DEPS)
-	$(CC) $(DEPS) -o $(EXEC) $(CCFLAGS)
+	$(CXX) $(DEPS) -o $(EXEC) $(CCFLAGS)
 
 $(INSTALLDIR):
 	mkdir -pv $(INSTALLDIR)

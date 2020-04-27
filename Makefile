@@ -33,11 +33,9 @@ endif
 EXEC=logcat-colorize
 DEPS=logcat-colorize.cpp
 
-ifndef PREFIX
-	PREFIX=usr
-endif
+PREFIX ?= /usr
 
-INSTALLDIR=$(DESTDIR)/$(PREFIX)/bin
+INSTALLDIR=$(DESTDIR)$(PREFIX)/bin
 
 $(EXEC): $(DEPS)
 	$(CXX) $(DEPS) -o $(EXEC) $(CXXFLAGS)

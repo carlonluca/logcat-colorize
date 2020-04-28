@@ -108,26 +108,71 @@ public:
     static const string reset;
 };
 
-const string Color::fblack     = "\033[0;30m";
-const string Color::fred       = "\033[0;31m";
-const string Color::fgreen     = "\033[0;32m";
-const string Color::fyellow    = "\033[0;33m";
-const string Color::fblue      = "\033[0;34m";
-const string Color::fpurple    = "\033[0;35m";
-const string Color::fcyan      = "\033[0;36m";
-const string Color::fwhite     = "\033[0;37m";
-const string Color::fgrey      = "\033[1;30m";
-const string Color::bblack     = "\033[40m";
-const string Color::bred       = "\033[41m";
-const string Color::bgreen     = "\033[42m";
-const string Color::byellow    = "\033[43m";
-const string Color::bblue      = "\033[44m";
-const string Color::bpurple    = "\033[45m";
-const string Color::bcyan      = "\033[46m";
-const string Color::bwhite     = "\033[47m";
-const string Color::bold       = "\033[1m";
-const string Color::underline  = "\033[4m";
-const string Color::reset      = "\033[0m";
+const string Color::fblack     = "30";
+const string Color::fred       = "31";
+const string Color::fgreen     = "32";
+const string Color::fyellow    = "33";
+const string Color::fblue      = "34";
+const string Color::fpurple    = "35";
+const string Color::fcyan      = "36";
+const string Color::fwhite     = "37";
+const string Color::fgrey      = "30";
+const string Color::bblack     = "40";
+const string Color::bred       = "41";
+const string Color::bgreen     = "42";
+const string Color::byellow    = "43";
+const string Color::bblue      = "44";
+const string Color::bpurple    = "45";
+const string Color::bcyan      = "46";
+const string Color::bwhite     = "47";
+const string Color::reset      = "0";
+
+struct Attribute
+{
+    static const string reset;
+    static const string bold;
+    static const string faint;
+    static const string underline;
+    static const string slowBlink;
+    static const string fastBlink;
+};
+
+const string Attribute::reset     = "0";
+const string Attribute::bold      = "1";
+const string Attribute::faint     = "2";
+const string Attribute::underline = "4";
+const string Attribute::slowBlink = "5";
+const string Attribute::fastBlink = "6";
+
+class AnsiSequence
+{
+public:
+    AnsiSequence(const string& attr, const string& bg, const string& fg) :
+        m_attr(attr), m_bg(bg), m_fg(fg) {}
+    string str() {
+        stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
+    friend std::ostream& operator<<(std::ostream& stream, const AnsiSequence& seq);
+
+private:
+    const string& m_attr;
+    const string& m_bg;
+    const string& m_fg;
+};
+
+class AnsiSequenceReset : public AnsiSequence
+{
+public:
+    AnsiSequenceReset() : AnsiSequence(Attribute::reset, Color::reset, Color::reset) {}
+};
+
+ostream& operator<<(ostream& stream, const AnsiSequence& seq)
+{
+    stream << "\033[" << seq.m_attr << ";" << seq.m_bg << ";" << seq.m_fg << "m";
+    return stream;
+}
 
 struct Logcat {
     string date;
@@ -137,7 +182,6 @@ struct Logcat {
     string message; 
     string thread;
 };
-
 
 class Format {
 
@@ -169,7 +213,12 @@ public:
                            /*message*/ "",
                            /*thread */ "" };
         this->pattern = pattern;
-        this->spotlight_color = Color::fwhite + Color::bred + "$1" + Color::reset;
+
+        stringstream ss;
+        ss << AnsiSequence(Attribute::reset, Color::bred, Color::fwhite)
+           << "$1"
+           << AnsiSequenceReset();
+        this->spotlight_color = ss.str();
     }
     virtual ~Format() {};
     static const int BRIEF;
@@ -183,31 +232,55 @@ public:
     virtual void parse(const string raw) = 0;
     virtual bool valid() { return false; }
     void print() {
-        
-        string out = "";
-        
+        stringstream out;
+
         // date    
         if (this->l.date != "") 
-            out += Color::fpurple + " " + this->l.date + " " + Color::reset;
+            out << AnsiSequence(Attribute::reset, Color::reset, Color::fpurple) << " " << this->l.date << " " << AnsiSequenceReset();
         
         // level
         if (this->l.level != "") {
-            if (this->l.level == "V") out += Color::fwhite + Color::bcyan   + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "D") out += Color::fwhite + Color::bblue   + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "I") out += Color::fwhite + Color::bgreen  + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "W") out += Color::fwhite + Color::byellow + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "E") out += Color::fwhite + Color::bred    + Color::bold + " " + this->l.level + " " + Color::reset;
-            if (this->l.level == "F") out += Color::fwhite + Color::bred    + Color::bold + " " + this->l.level + " " + Color::reset;
+            if (this->l.level == "V")
+                out << AnsiSequence(Attribute::bold, Color::bcyan, Color::fwhite) << " "
+                    << this->l.level
+                    << " " << AnsiSequenceReset();
+            else if (this->l.level == "D")
+                out << AnsiSequence(Attribute::bold, Color::bblue, Color::fwhite) << " "
+                    << this->l.level
+                    << " " << AnsiSequenceReset();
+            else if (this->l.level == "I")
+                out << AnsiSequence(Attribute::bold, Color::bgreen, Color::fwhite) << " "
+                    << this->l.level
+                    << " " << AnsiSequenceReset();
+            else if (this->l.level == "W")
+                out << AnsiSequence(Attribute::bold, Color::byellow, Color::fwhite) << " "
+                    << this->l.level
+                    << " " << AnsiSequenceReset();
+            else if (this->l.level == "E")
+                out << AnsiSequence(Attribute::bold, Color::bred, Color::fwhite) << " "
+                    << this->l.level
+                    << " " << AnsiSequenceReset();
+            else if (this->l.level == "F")
+                out << AnsiSequence(Attribute::bold, Color::bred, Color::fwhite) << " "
+                    << this->l.level
+                    << " " << AnsiSequenceReset();
+            out << " ";
         }
         
         // process/thread
         if (this->l.process != "") {
-            out += " " + Color::fcyan + Color::bblack + "[" + this->l.process + (this->l.thread != "" ? "/" + this->l.thread : "") + "]" + Color::reset;
+            out << AnsiSequence(Attribute::reset, Color::bblack, Color::fcyan)
+                << "[" << this->l.process
+                << (this->l.thread != "" ? "/" + this->l.thread : "")
+                << "] "
+                << AnsiSequenceReset();
         }
         
         // tag    
         if (this->l.tag != "")
-            out += " " + Color::fwhite + this->l.tag + Color::reset;
+            out << AnsiSequence(Attribute::reset, Color::bblack, Color::fwhite)
+                << this->l.tag
+                << AnsiSequenceReset();
 
         // message
         if (this->l.message != "") {
@@ -220,16 +293,18 @@ public:
             else if (this->l.level == "F") messageColor = &Color::fred;
             else messageColor = &Color::fwhite;
 
-            out += " ";
-            out += *messageColor;
+            out << " ";
+            out << AnsiSequence(Attribute::reset, Color::reset, *messageColor);
             if (!spotlight_pattern.empty())
-                out += boost::regex_replace(this->l.message, spotlight_pattern, spotlight_color + *messageColor);
+                out << boost::regex_replace(this->l.message,
+                                            spotlight_pattern,
+                                            spotlight_color + AnsiSequence(Attribute::reset, Color::reset, *messageColor).str());
             else
-                out += this->l.message;
+                out << this->l.message;
         }
 
-        out += Color::reset;
-        cout << out << endl;
+        out << AnsiSequenceReset();
+        cout << out.str() << endl;
     }
 };
 

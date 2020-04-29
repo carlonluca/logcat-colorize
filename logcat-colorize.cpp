@@ -533,29 +533,23 @@ public:
 
 
 Format* getFormat(const string raw) {
-
     //
     // At this point we don't know yet which format is being used, so guess it
     // (from the more complex first)
     //
-    Format * out = NULL;
-    out = new ThreadTime();
+    std::unique_ptr<Format> out(new ThreadTime());
     out->parse(raw);
     if (!out->valid()) {
-        out = NULL;
-        out = new Time();
+        out.reset(new Time());
         out->parse(raw);
         if (!out->valid()) {
-            out = NULL;
-            out = new Brief();
+            out.reset(new Brief());
             out->parse(raw);
             if (!out->valid()) {
-                out = NULL;
-                out = new Process();
+                out.reset(new Process());
                 out->parse(raw);
                 if (!out->valid()) {
-                    out = NULL;
-                    out = new Tag();
+                    out.reset(new Tag());
                     out->parse(raw);
                     if (!out->valid()) {
                         out = NULL;
@@ -564,7 +558,7 @@ Format* getFormat(const string raw) {
             }
         }
     }
-    return out;
+    return out.release();
 }
 
 void list_ansi()

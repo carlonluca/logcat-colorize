@@ -162,7 +162,7 @@ public:
             m_str = stream.str();
         }
 
-    string& str() { return m_str; }
+    const string& str() const { return m_str; }
     friend ostream& operator<<(ostream& stream, const AnsiSequence& seq);
 
 private:
@@ -267,10 +267,12 @@ public:
     void print() {
         stringstream out;
 
-        // date    
-        if (this->l.date != "") 
-            out << AnsiSequence(Attribute::reset, Color::bdefault, Color::fpurple)
-                << " " << this->l.date << " " << RESET;
+        // date
+        if (this->l.date != "") {
+            static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bdefault, Color::fpurple);
+            out << seq
+                << " " << spotIfNeeded(l.date, seq) << " " << RESET;
+        }
         
         // level
         AnsiSequence* idSeq = nullptr;
@@ -309,10 +311,12 @@ public:
         // process/thread
         if (this->l.process != "") {
             static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bblack, Color::fcyan);
+            stringstream _out;
+            _out << "[" << this->l.process
+                 << (this->l.thread != "" ? "/" + this->l.thread : "")
+                 << "] ";
             out << seq
-                << "[" << this->l.process
-                << (this->l.thread != "" ? "/" + this->l.thread : "")
-                << "] "
+                << spotIfNeeded(_out.str(), seq)
                 << RESET;
         }
         
@@ -320,7 +324,7 @@ public:
         if (this->l.tag != "") {
             static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bblack, Color::fwhite);
             out << seq
-                << this->l.tag
+                << spotIfNeeded(l.tag, seq)
                 << RESET;
         }
 
@@ -329,12 +333,7 @@ public:
             out << " ";
             if (idSeq)
                 out << *msgSeq;
-            if (!spotlight_pattern.empty())
-                out << boost::regex_replace(this->l.message,
-                                            spotlight_pattern,
-                                            spotlight_color + (msgSeq ? msgSeq->str() : RESET.str()));
-            else
-                out << this->l.message;
+            out << spotIfNeeded(l.message, (msgSeq ? *msgSeq : RESET));
         }
 
         out << RESET;
@@ -387,6 +386,13 @@ private:
         }
         
         return boost::none;
+    }
+
+    string spotIfNeeded(const string& log, const AnsiSequence& resume) {
+        if (!spotlight_pattern.empty())
+            return boost::regex_replace(log, spotlight_pattern, spotlight_color + resume.str());
+        else
+            return log;
     }
 };
 

@@ -26,10 +26,10 @@
 #CC=g++
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-   CXXFLAGS += -lboost_regex -lboost_program_options -std=c++0x
+   CXXFLAGS += -lboost_regex -lboost_program_options -std=c++0x -O3
 else ifeq ($(UNAME_S),Darwin)
    BOOSTDIR ?= /opt/local
-   CXXFLAGS += -L$(BOOSTDIR)/lib -lboost_regex-mt -lboost_program_options-mt -std=c++0x -I$(BOOSTDIR)/include -Wno-deprecated-register
+   CXXFLAGS += -L$(BOOSTDIR)/lib -lboost_regex-mt -lboost_program_options-mt -std=c++0x -I$(BOOSTDIR)/include -Wno-deprecated-register -O3
 endif
 EXEC=logcat-colorize
 DEPS=logcat-colorize.cpp

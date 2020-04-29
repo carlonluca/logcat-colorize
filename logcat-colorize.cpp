@@ -38,10 +38,12 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
+#include <optional>
 #include <boost/regex.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 using namespace std;
 
 const string NAME = "logcat-colorize";
@@ -156,12 +158,12 @@ public:
         ss << *this;
         return ss.str();
     }
-    friend std::ostream& operator<<(std::ostream& stream, const AnsiSequence& seq);
+    friend ostream& operator<<(ostream& stream, const AnsiSequence& seq);
 
 private:
-    const string& m_attr;
-    const string& m_bg;
-    const string& m_fg;
+    const string m_attr;
+    const string m_bg;
+    const string m_fg;
 };
 
 class AnsiSequenceReset : public AnsiSequence
@@ -320,10 +322,25 @@ private:
 
     }
 
-    optional<AnsiSequence> parseEscapeSequenceVariable(const string& envVar) {
+    boost::optional<AnsiSequence> parseEscapeSequenceVariable(const string& envVar) {
         char* envValue = getenv(envVar.c_str());
         if (!envValue)
-            return nullopt;
+            return boost::none;
+        
+        string escapeSequenceString(envValue);
+        string::const_iterator start;
+        start = escapeSequenceString.begin();
+        boost::smatch results;
+        boost::match_flag_type flags = boost::match_default;
+        boost::regex_search(start, escapeSequenceString.end(), results, this->escapeSequencePattern, flags);
+        if (results.size() >= 4) {
+            string attr = results[1];
+            string bg = results[2];
+            string fg = results[3];
+            return AnsiSequence(attr, bg, fg);
+        }
+        
+        return boost::none;
     }
 };
 

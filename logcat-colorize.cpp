@@ -94,7 +94,6 @@ public:
     static const string fpurple;
     static const string fcyan;
     static const string fwhite;
-    static const string fgrey;
     static const string fdefault;
     static const string bblack;
     static const string bred;
@@ -116,8 +115,7 @@ const string Color::fyellow    = "33";
 const string Color::fblue      = "34";
 const string Color::fpurple    = "35";
 const string Color::fcyan      = "36";
-const string Color::fwhite     = "37";
-const string Color::fgrey      = "30";
+const string Color::fwhite     = "97";
 const string Color::fdefault   = "39";
 const string Color::bblack     = "40";
 const string Color::bred       = "41";
@@ -479,8 +477,7 @@ void list_ansi()
         Color::fblue,
         Color::fpurple,
         Color::fcyan,
-        Color::fwhite,
-        Color::fgrey
+        Color::fwhite
     };
 
     vector<string> bgs {

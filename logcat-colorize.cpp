@@ -67,7 +67,8 @@ const string HELP =
     "                       (by default, those are printed out without colorizing)\n"
     "   -h, --help          prints this help information\n"
     "   -s, --spotlight     highlight pattern in the output, value as REGEXP\n"
-    "                       (i.e, -s '\bWORD\b'\n"
+    "                       (i.e, -s '\bWORD\b')\n"
+    "       --list-ansi     list available ansi escape codes to format the output\n"
     "\n"
     "Examples:\n"
     "    Simplest usage:\n"
@@ -151,19 +152,24 @@ const string Attribute::reverse   = "7";
 class AnsiSequence
 {
 public:
+    AnsiSequence() {}
     AnsiSequence(const string& attr, const string& bg, const string& fg) :
-        m_attr(attr), m_bg(bg), m_fg(fg) {}
-    string str() {
-        stringstream ss;
-        ss << *this;
-        return ss.str();
-    }
+        m_attr(attr),
+        m_bg(bg),
+        m_fg(fg) {
+            stringstream stream;
+            stream << "\033[" << attr << ";" << bg << ";" << fg << "m";
+            m_str = stream.str();
+        }
+
+    string& str() { return m_str; }
     friend ostream& operator<<(ostream& stream, const AnsiSequence& seq);
 
 private:
-    const string m_attr;
-    const string m_bg;
-    const string m_fg;
+    string m_attr;
+    string m_bg;
+    string m_fg;
+    string m_str;
 };
 
 class AnsiSequenceReset : public AnsiSequence
@@ -174,7 +180,7 @@ public:
 
 ostream& operator<<(ostream& stream, const AnsiSequence& seq)
 {
-    stream << "\033[" << seq.m_attr << ";" << seq.m_bg << ";" << seq.m_fg << "m";
+    stream << seq.m_str;
     return stream;
 }
 
@@ -218,17 +224,20 @@ public:
                            /*message*/ "",
                            /*thread */ "" };
         this->pattern = pattern;
-        this->escapeSequencePattern = "\\^\[(\\d+);(\\d+);(\\d+)m$";
+        this->escapeSequencePattern = "\\^\\[(\\d+);(\\d+);(\\d+)m$";
+
+        RESET = AnsiSequenceReset();
 
         stringstream ss;
         ss << AnsiSequence(Attribute::reset, Color::bred, Color::fwhite)
            << "$1"
-           << AnsiSequenceReset();
+           << RESET;
         this->spotlight_color = ss.str();
 
         // Parse configuration.
         parseConfiguration();
     }
+
     virtual ~Format() {};
     static const int BRIEF;
     static const int PROCESS;
@@ -237,6 +246,20 @@ public:
     static const int TIME;
     static const int THREADTIME;
     static const int LONG;
+
+    static AnsiSequence ID_VERBOSE;
+    static AnsiSequence ID_DEBUG;
+    static AnsiSequence ID_INFO;
+    static AnsiSequence ID_WARNING;
+    static AnsiSequence ID_ERROR;
+    static AnsiSequence ID_FATAL;
+    static AnsiSequence MSG_VERBOSE;
+    static AnsiSequence MSG_DEBUG;
+    static AnsiSequence MSG_INFO;
+    static AnsiSequence MSG_WARNING;
+    static AnsiSequence MSG_ERROR;
+    static AnsiSequence MSG_FATAL;
+    static AnsiSequence RESET;
     
     virtual void parse(const string raw) = 0;
     virtual bool valid() { return false; }
@@ -246,80 +269,103 @@ public:
 
         // date    
         if (this->l.date != "") 
-            out << AnsiSequence(Attribute::reset, Color::bdefault, Color::fpurple) << " " << this->l.date << " " << AnsiSequenceReset();
+            out << AnsiSequence(Attribute::reset, Color::bdefault, Color::fpurple)
+                << " " << this->l.date << " " << RESET;
         
         // level
+        AnsiSequence* idSeq = nullptr;
+        AnsiSequence* msgSeq = nullptr;
+        if (l.level == "D") {
+            idSeq = &ID_DEBUG;
+            msgSeq = &MSG_DEBUG;
+        }
+        else if (l.level == "V") {
+            idSeq = &ID_VERBOSE;
+            msgSeq = &MSG_VERBOSE;
+        }
+        else if (l.level == "I") {
+            idSeq = &ID_INFO;
+            msgSeq = &MSG_INFO;
+        }
+        else if (l.level == "W") {
+            idSeq = &ID_WARNING;
+            msgSeq = &MSG_WARNING;
+        }
+        else if (l.level == "E") {
+            idSeq = &ID_ERROR;
+            msgSeq = &MSG_ERROR;
+        }
+        else if (l.level == "F") {
+            idSeq = &ID_FATAL;
+            msgSeq = &MSG_FATAL;
+        }
+
         if (this->l.level != "") {
-            if (this->l.level == "V")
-                out << AnsiSequence(Attribute::bold, Color::bcyan, Color::fwhite) << " "
-                    << this->l.level
-                    << " " << AnsiSequenceReset();
-            else if (this->l.level == "D")
-                out << AnsiSequence(Attribute::bold, Color::bblue, Color::fwhite) << " "
-                    << this->l.level
-                    << " " << AnsiSequenceReset();
-            else if (this->l.level == "I")
-                out << AnsiSequence(Attribute::bold, Color::bgreen, Color::fwhite) << " "
-                    << this->l.level
-                    << " " << AnsiSequenceReset();
-            else if (this->l.level == "W")
-                out << AnsiSequence(Attribute::bold, Color::byellow, Color::fwhite) << " "
-                    << this->l.level
-                    << " " << AnsiSequenceReset();
-            else if (this->l.level == "E")
-                out << AnsiSequence(Attribute::bold, Color::bred, Color::fwhite) << " "
-                    << this->l.level
-                    << " " << AnsiSequenceReset();
-            else if (this->l.level == "F")
-                out << AnsiSequence(Attribute::bold, Color::bred, Color::fwhite) << " "
-                    << this->l.level
-                    << " " << AnsiSequenceReset();
+            if (idSeq)
+                out << *idSeq << " " << this->l.level << " " << RESET;
             out << " ";
         }
         
         // process/thread
         if (this->l.process != "") {
-            out << AnsiSequence(Attribute::reset, Color::bblack, Color::fcyan)
+            static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bblack, Color::fcyan);
+            out << seq
                 << "[" << this->l.process
                 << (this->l.thread != "" ? "/" + this->l.thread : "")
                 << "] "
-                << AnsiSequenceReset();
+                << RESET;
         }
         
         // tag    
-        if (this->l.tag != "")
-            out << AnsiSequence(Attribute::reset, Color::bblack, Color::fwhite)
+        if (this->l.tag != "") {
+            static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bblack, Color::fwhite);
+            out << seq
                 << this->l.tag
-                << AnsiSequenceReset();
+                << RESET;
+        }
 
         // message
         if (this->l.message != "") {
-            const string* messageColor;
-            if (this->l.level == "V") messageColor = &Color::fblack;
-            else if (this->l.level == "D") messageColor = &Color::fblue;
-            else if (this->l.level == "I") messageColor = &Color::fgreen;
-            else if (this->l.level == "W") messageColor = &Color::fyellow;
-            else if (this->l.level == "E") messageColor = &Color::fred;
-            else if (this->l.level == "F") messageColor = &Color::fred;
-            else messageColor = &Color::fwhite;
-
             out << " ";
-            out << AnsiSequence(Attribute::reset, Color::bdefault, *messageColor);
+            if (idSeq)
+                out << *msgSeq;
             if (!spotlight_pattern.empty())
                 out << boost::regex_replace(this->l.message,
                                             spotlight_pattern,
-                                            spotlight_color + AnsiSequence(Attribute::reset, Color::bdefault, *messageColor).str());
+                                            spotlight_color + (msgSeq ? msgSeq->str() : RESET.str()));
             else
                 out << this->l.message;
         }
 
-        out << AnsiSequenceReset();
+        out << RESET;
         cout << out.str() << endl;
     }
 
 private:
     void parseConfiguration() {
 
+#define RESET_FORMAT(level) \
+    reset_format("LOGCAT_COLORIZE_" #level, level)
+
+        RESET_FORMAT(ID_DEBUG);
+        RESET_FORMAT(ID_VERBOSE);
+        RESET_FORMAT(ID_INFO);
+        RESET_FORMAT(ID_WARNING);
+        RESET_FORMAT(ID_ERROR);
+        RESET_FORMAT(ID_FATAL);
+        RESET_FORMAT(MSG_DEBUG);
+        RESET_FORMAT(MSG_VERBOSE);
+        RESET_FORMAT(MSG_INFO);
+        RESET_FORMAT(MSG_WARNING);
+        RESET_FORMAT(MSG_ERROR);
+        RESET_FORMAT(MSG_FATAL);
+    }
+
+    void reset_format(const string& envVarName, AnsiSequence& ansiSequence)
+    {
+        boost::optional<AnsiSequence> custom = parseEscapeSequenceVariable(envVarName);
+        if (custom)
+            ansiSequence = custom.get();
     }
 
     boost::optional<AnsiSequence> parseEscapeSequenceVariable(const string& envVar) {
@@ -327,7 +373,7 @@ private:
         if (!envValue)
             return boost::none;
         
-        string escapeSequenceString(envValue);
+        const string escapeSequenceString(envValue);
         string::const_iterator start;
         start = escapeSequenceString.begin();
         boost::smatch results;
@@ -352,6 +398,21 @@ const int Format::TIME       = 4;
 const int Format::THREADTIME = 5;
 const int Format::LONG       = 6;
 
+AnsiSequence Format::ID_VERBOSE = AnsiSequence(Attribute::bold, Color::bcyan, Color::fwhite);
+AnsiSequence Format::ID_DEBUG   = AnsiSequence(Attribute::bold, Color::bblue, Color::fwhite);
+AnsiSequence Format::ID_INFO    = AnsiSequence(Attribute::bold, Color::bgreen, Color::fwhite);
+AnsiSequence Format::ID_WARNING = AnsiSequence(Attribute::bold, Color::byellow, Color::fwhite);
+AnsiSequence Format::ID_ERROR   = AnsiSequence(Attribute::bold, Color::bred, Color::fwhite);
+AnsiSequence Format::ID_FATAL   = ID_ERROR;
+
+AnsiSequence Format::MSG_VERBOSE = AnsiSequence(Attribute::reset, Color::bdefault, Color::fcyan);
+AnsiSequence Format::MSG_DEBUG   = AnsiSequence(Attribute::reset, Color::bdefault, Color::fblue);
+AnsiSequence Format::MSG_INFO    = AnsiSequence(Attribute::reset, Color::bdefault, Color::fgreen);
+AnsiSequence Format::MSG_WARNING = AnsiSequence(Attribute::reset, Color::bdefault, Color::fyellow);
+AnsiSequence Format::MSG_ERROR   = AnsiSequence(Attribute::reset, Color::bdefault, Color::fred);
+AnsiSequence Format::MSG_FATAL   = MSG_ERROR;
+
+AnsiSequence Format::RESET       = AnsiSequenceReset();
 
 class Tag : public Format {
 

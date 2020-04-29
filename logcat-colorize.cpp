@@ -191,6 +191,7 @@ protected:
     Logcat l;
     boost::regex pattern;
     boost::regex spotlight_pattern;
+    boost::regex escapeSequencePattern;
     string spotlight_color;
     boost::smatch match(const string& raw) {
         string::const_iterator start;
@@ -215,12 +216,16 @@ public:
                            /*message*/ "",
                            /*thread */ "" };
         this->pattern = pattern;
+        this->escapeSequencePattern = "\\^\[(\\d+);(\\d+);(\\d+)m$";
 
         stringstream ss;
         ss << AnsiSequence(Attribute::reset, Color::bred, Color::fwhite)
            << "$1"
            << AnsiSequenceReset();
         this->spotlight_color = ss.str();
+
+        // Parse configuration.
+        parseConfiguration();
     }
     virtual ~Format() {};
     static const int BRIEF;
@@ -233,6 +238,7 @@ public:
     
     virtual void parse(const string raw) = 0;
     virtual bool valid() { return false; }
+
     void print() {
         stringstream out;
 
@@ -307,6 +313,17 @@ public:
 
         out << AnsiSequenceReset();
         cout << out.str() << endl;
+    }
+
+private:
+    void parseConfiguration() {
+
+    }
+
+    optional<AnsiSequence> parseEscapeSequenceVariable(const string& envVar) {
+        char* envValue = getenv(envVar.c_str());
+        if (!envValue)
+            return nullopt;
     }
 };
 
@@ -508,7 +525,7 @@ void list_ansi()
         for (const string& fg: fgs) {
             for (const string& attr: attrs) {
                 cout << AnsiSequence(attr, bg, fg)
-                     << "\\033["
+                     << "^["
                      << attr
                      << ";"
                      << bg

@@ -95,6 +95,7 @@ public:
     static const string fcyan;
     static const string fwhite;
     static const string fgrey;
+    static const string fdefault;
     static const string bblack;
     static const string bred;
     static const string bgreen;
@@ -105,7 +106,7 @@ public:
     static const string bwhite;
     static const string bold;
     static const string underline;
-    static const string reset;
+    static const string bdefault;
 };
 
 const string Color::fblack     = "30";
@@ -117,6 +118,7 @@ const string Color::fpurple    = "35";
 const string Color::fcyan      = "36";
 const string Color::fwhite     = "37";
 const string Color::fgrey      = "30";
+const string Color::fdefault   = "39";
 const string Color::bblack     = "40";
 const string Color::bred       = "41";
 const string Color::bgreen     = "42";
@@ -125,7 +127,7 @@ const string Color::bblue      = "44";
 const string Color::bpurple    = "45";
 const string Color::bcyan      = "46";
 const string Color::bwhite     = "47";
-const string Color::reset      = "0";
+const string Color::bdefault   = "49";
 
 struct Attribute
 {
@@ -135,6 +137,7 @@ struct Attribute
     static const string underline;
     static const string slowBlink;
     static const string fastBlink;
+    static const string reverse;
 };
 
 const string Attribute::reset     = "0";
@@ -143,6 +146,7 @@ const string Attribute::faint     = "2";
 const string Attribute::underline = "4";
 const string Attribute::slowBlink = "5";
 const string Attribute::fastBlink = "6";
+const string Attribute::reverse   = "7";
 
 class AnsiSequence
 {
@@ -165,7 +169,7 @@ private:
 class AnsiSequenceReset : public AnsiSequence
 {
 public:
-    AnsiSequenceReset() : AnsiSequence(Attribute::reset, Color::reset, Color::reset) {}
+    AnsiSequenceReset() : AnsiSequence(Attribute::reset, Color::bdefault, Color::fdefault) {}
 };
 
 ostream& operator<<(ostream& stream, const AnsiSequence& seq)
@@ -236,7 +240,7 @@ public:
 
         // date    
         if (this->l.date != "") 
-            out << AnsiSequence(Attribute::reset, Color::reset, Color::fpurple) << " " << this->l.date << " " << AnsiSequenceReset();
+            out << AnsiSequence(Attribute::reset, Color::bdefault, Color::fpurple) << " " << this->l.date << " " << AnsiSequenceReset();
         
         // level
         if (this->l.level != "") {
@@ -294,11 +298,11 @@ public:
             else messageColor = &Color::fwhite;
 
             out << " ";
-            out << AnsiSequence(Attribute::reset, Color::reset, *messageColor);
+            out << AnsiSequence(Attribute::reset, Color::bdefault, *messageColor);
             if (!spotlight_pattern.empty())
                 out << boost::regex_replace(this->l.message,
                                             spotlight_pattern,
-                                            spotlight_color + AnsiSequence(Attribute::reset, Color::reset, *messageColor).str());
+                                            spotlight_color + AnsiSequence(Attribute::reset, Color::bdefault, *messageColor).str());
             else
                 out << this->l.message;
         }
@@ -464,6 +468,64 @@ Format* getFormat(const string raw) {
     return out;
 }
 
+void list_ansi()
+{
+    vector<string> fgs {
+        Color::fdefault,
+        Color::fblack,
+        Color::fred,
+        Color::fgreen,
+        Color::fyellow,
+        Color::fblue,
+        Color::fpurple,
+        Color::fcyan,
+        Color::fwhite,
+        Color::fgrey
+    };
+
+    vector<string> bgs {
+        Color::bdefault,
+        Color::bblack,
+        Color::bred,
+        Color::bgreen,
+        Color::byellow,
+        Color::bblue,
+        Color::bpurple,
+        Color::bcyan,
+        Color::bwhite
+    };
+
+    vector<string> attrs {
+        Attribute::reset,
+        Attribute::bold,
+        Attribute::faint,
+        Attribute::underline,
+        Attribute::slowBlink,
+        Attribute::fastBlink,
+        Attribute::reverse
+    };
+
+    int bkgCount = 0;
+    for (const string& bg: bgs) {
+        cout << endl << "Background " << bkgCount++ << ":" << endl;
+        for (const string& fg: fgs) {
+            for (const string& attr: attrs) {
+                cout << AnsiSequence(attr, bg, fg)
+                     << "\\033["
+                     << attr
+                     << ";"
+                     << bg
+                     << ";"
+                     << fg
+                     << "m"
+                     << AnsiSequenceReset() << " ";
+            }
+
+            cout << endl;
+        }
+    }
+
+}
 
 int main(int argc, char** argv) {
     try {
@@ -474,14 +536,22 @@ int main(int argc, char** argv) {
         desc.add_options()
           ("help,h", "")
           ("spotlight,s",po::value<string>(), "")
-          ("ignore,i", "");
+          ("ignore,i", "")
+          ("list-ansi", "");
 
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
+
         if (vm.count("help")) {
             std::cout << HELP << std::endl;
             return SUCCESS;
         }
+
+        if (vm.count("list-ansi")) {
+            list_ansi();
+            return SUCCESS;
+        }
+
         if (vm.count("ignore")) ignore = true;
         po::notify(vm);
 

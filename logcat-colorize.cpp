@@ -38,7 +38,6 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
-#include <optional>
 #include <boost/regex.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>

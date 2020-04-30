@@ -54,6 +54,12 @@ Compile and install:
         # Save logcat output to file and read later with logcat colorize.
         $ adb logcat > /tmp/logcat.txt
         $ cat /tmp/logcat.txt | logcat-colorize
+        
+        # List available formats, then set a specific format for debug messages.
+        # Set in your ~/.bash_profile to make it permanent.
+        $ logcat-colorize --list-ansi
+        $ export LOGCAT_COLORIZE_MSG_DEBUG="^[4;44;33m"
+        $ adb logcat | logcat-colorize
 
 **Note**: I had written this as a quick approach in bash, but turns out it is pretty slow, specially pulling logcat from new devices (really a lot). So I decided to go a bit lower level and re-wrote this in C++. For reference, if you want to see the bash version, check out the [tag 0.2][3].
 

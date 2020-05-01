@@ -68,7 +68,7 @@ Compile and install:
         $ export LOGCAT_COLORIZE_MSG_DEBUG="^[4;44;33m"
         $ adb logcat | logcat-colorize
 
-**Note**: I had written this as a quick approach in bash, but turns out it is pretty slow, specially pulling logcat from new devices (really a lot). So I decided to go a bit lower level and re-wrote this in C++. For reference, if you want to see the bash version, check out the [tag 0.2][#v0.2.0].
+**Note**: I had written this as a quick approach in bash, but turns out it is pretty slow, specially pulling logcat from new devices (really a lot). So I decided to go a bit lower level and re-wrote this in C++. For reference, if you want to see the bash version, check out tag 0.2.0 (3f1486234a).
 
 
 [1]: http://developer.android.com/tools/debugging/debugging-log.html#outputFormat

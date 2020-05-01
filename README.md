@@ -15,6 +15,13 @@ A simple program that colorizes Android Debug Bridge (adb)'s logcat output on a 
 
 You can install logcat-colorize from Snappy: https://snapcraft.io/logcat-colorize.
 
+    sudo snap install logcat-colorize
+
+## Macports
+
+You can install logcat-colorize from macports: https://github.com/macports/macports-ports/blob/master/devel/logcat-colorize/Portfile
+
+    sudo port install logcat-colorize
 
 ## DIY (from sources)
 

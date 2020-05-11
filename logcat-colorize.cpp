@@ -322,7 +322,7 @@ public:
             stringstream _out;
             _out << "[" << this->l.process
                  << (this->l.thread != "" ? "/" + this->l.thread : "")
-                 << "] ";
+                 << "]";
             out << seq
                 << spotIfNeeded(_out.str(), seq)
                 << RESET;
@@ -330,9 +330,9 @@ public:
         
         // tag    
         if (this->l.tag != "") {
-            static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bblack, Color::fwhite);
+            static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bdefault, Color::fwhite);
             out << seq
-                << spotIfNeeded(l.tag, seq)
+                << " " << spotIfNeeded(l.tag, seq)
                 << RESET;
         }
 

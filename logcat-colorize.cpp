@@ -46,7 +46,7 @@
 using namespace std;
 
 const string NAME = "logcat-colorize";
-const string VERSION = "0.9.0";
+const string VERSION = "0.10.0";
 
 const int SUCCESS = 0;
 const int ERROR_UNKNOWN = 1;
@@ -74,6 +74,7 @@ const string HELP =
     "\n"
     "LOGCAT_COLORIZE_ID_{DEBUG, VERBOSE, INFO, WARNING, ERROR, FATAL}\n"
     "LOGCAT_COLORIZE_MSG_{DEBUG, VERBOSE, INFO, WARNING, ERROR, FATAL}\n"
+    "LOGCAT_COLORIZE_TID_PID\n"
     "\n"
     "The value of each variable can be set to the proper desired ANSI escape code. To\n"
     "print a complete list of the available formats, use the --list-ansi param.\n"
@@ -267,6 +268,7 @@ public:
     static AnsiSequence MSG_WARNING;
     static AnsiSequence MSG_ERROR;
     static AnsiSequence MSG_FATAL;
+    static AnsiSequence TID_PID;
     static AnsiSequence RESET;
     
     virtual void parse(const string raw) = 0;
@@ -318,13 +320,12 @@ public:
         
         // process/thread
         if (this->l.process != "") {
-            static AnsiSequence seq = AnsiSequence(Attribute::reset, Color::bblack, Color::fcyan);
             stringstream _out;
             _out << "[" << this->l.process
                  << (this->l.thread != "" ? "/" + this->l.thread : "")
                  << "]";
-            out << seq
-                << spotIfNeeded(_out.str(), seq)
+            out << TID_PID
+                << spotIfNeeded(_out.str(), TID_PID)
                 << RESET;
         }
         
@@ -366,6 +367,7 @@ private:
         RESET_FORMAT(MSG_WARNING);
         RESET_FORMAT(MSG_ERROR);
         RESET_FORMAT(MSG_FATAL);
+        RESET_FORMAT(TID_PID);
     }
 
     void reset_format(const string& envVarName, AnsiSequence& ansiSequence)
@@ -425,6 +427,8 @@ AnsiSequence Format::MSG_INFO    = AnsiSequence(Attribute::reset, Color::bdefaul
 AnsiSequence Format::MSG_WARNING = AnsiSequence(Attribute::reset, Color::bdefault, Color::fyellow);
 AnsiSequence Format::MSG_ERROR   = AnsiSequence(Attribute::reset, Color::bdefault, Color::fred);
 AnsiSequence Format::MSG_FATAL   = MSG_ERROR;
+
+AnsiSequence Format::TID_PID     = AnsiSequence(Attribute::reset, Color::bblack, Color::fcyan);
 
 AnsiSequence Format::RESET       = AnsiSequenceReset();
 

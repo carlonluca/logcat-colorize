@@ -5,7 +5,7 @@ PortGroup           github 1.0
 PortGroup           makefile 1.0
 
 github.setup        carlonluca logcat-colorize 0.9.0 v
-revision            1
+revision            0
 github.tarball_from archive
 license             Apache-2
 categories          devel
@@ -16,9 +16,9 @@ long_description    logcat-colorize is a parser for the output of the \
                     Android Debug Bridge logcat output. It accepts the \
                     logcat output from stdin and produces a formatted \
                     output, optimised for reading in a console.
-checksums           rmd160  681c23fa21da367cd686716829c7dbbc257eb1c5 \
-                    sha256  a1d31b821ba4be5f4e1a3156dce27521af204775f6928d9f5fe1319d026cbc78 \
-                    size    789589
+checksums           rmd160  dca841a0db9b38171f382bf90ff12186172c5e61 \
+                    sha256  3d2541e175cc3fb75ab2af61b0376c5cfed55a2146ce199f9d1e434ec81515aa \
+                    size    789560
 depends_lib         port:boost
 compiler.cxx_standard \
                     2011

@@ -7,7 +7,7 @@ A simple program that colorizes Android Debug Bridge (adb)'s logcat output on a 
   - supports output formats: brief, tag, process, time or threadtime (see more about this in the official [docs][1]);
   - works on Linux and Mac OS;
 
-![image][2]
+![image](extras/shot.png)
 
 # Installation
 
@@ -22,6 +22,12 @@ You can install logcat-colorize from Snappy: https://snapcraft.io/logcat-coloriz
 You can install logcat-colorize from macports: https://github.com/macports/macports-ports/blob/master/devel/logcat-colorize/Portfile
 
     sudo port install logcat-colorize
+
+## AUR
+
+For those running on arch, there is also a package here: https://aur.archlinux.org/packages/logcat-colorize/
+
+    sudo pamac install logcat-colorize
 
 ## DIY (from sources)
 

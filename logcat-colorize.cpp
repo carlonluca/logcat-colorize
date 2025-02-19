@@ -503,7 +503,7 @@ class Time : public Format {
 
 public:
     const int type = Format::TIME;
-    Time() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}):? ([VDIWEF])/(.*?)\\(([ 0-9]{1,})\\): (.*)$") {}
+    Time() : Format("^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}):? ([VDIWEF])/(.*?)\\(([ 0-9]{1,})\\)\\s*: (.*)$") {}
     ~Time() {}
     virtual void parse(string raw) {
         boost::smatch matches = this->match(raw);

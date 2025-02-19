@@ -46,7 +46,7 @@
 using namespace std;
 
 const string NAME = "logcat-colorize";
-const string VERSION = "0.10.0";
+const string VERSION = "0.10.1";
 
 const int SUCCESS = 0;
 const int ERROR_UNKNOWN = 1;
